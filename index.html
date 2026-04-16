@@ -28,7 +28,10 @@
 
         .app-card { background: var(--card-bg); backdrop-filter: blur(10px); width: 100%; max-width: 500px; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; margin: auto; }
         
-        /* 座位區樣式 */
+        .config-box { background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 10px; margin-bottom: 15px; }
+        .role-row { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; padding: 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); }
+        .btn-c { background: rgba(255,255,255,0.1); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; }
+
         .seat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
         .seat-btn { 
             background: #3d3434; border: none; border-radius: 12px; height: 60px; 
@@ -37,16 +40,13 @@
         .seat-btn.my-choice { background: #555; border: 2px solid #fff; box-shadow: 0 0 15px var(--good); }
         .seat-btn:disabled:not(.my-choice) { opacity: 0.2; filter: grayscale(1); }
 
-        /* 看牌卡片樣式 */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .identity-card { background: #e5e7eb; width: 85%; max-width: 380px; border-radius: 20px; padding: 35px; color: #333; text-align: center; }
         .role-title { font-size: 2.5rem; font-weight: 900; color: #1f2937; margin: 10px 0; }
         
-        /* 主持人名單樣式 */
         .host-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .death-btn { background: #444; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
         .death-btn.dead { background: var(--wolf); color: #fff; }
-        .is-dead-text { text-decoration: line-through; color: #666 !important; }
 
         .share-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #e63946; color: white; padding: 16px 0; text-align: center; font-weight: bold; cursor: pointer; z-index: 500; }
         .hidden { display: none !important; }
@@ -60,11 +60,11 @@
         <div style="display:flex; gap:10px; margin-bottom: 15px;">
             <div style="flex:1;">
                 <div style="text-align:center; color:var(--wolf); font-size:12px; font-weight:bold;">🐺 狼人陣營</div>
-                <div id="wolf-list" style="background:rgba(0,0,0,0.3); border-radius:12px; padding:8px;"></div>
+                <div id="wolf-list" class="config-box"></div>
             </div>
             <div style="flex:1;">
                 <div style="text-align:center; color:var(--good); font-size:12px; font-weight:bold;">😇 好人陣營</div>
-                <div id="good-list" style="background:rgba(0,0,0,0.3); border-radius:12px; padding:8px;"></div>
+                <div id="good-list" class="config-box"></div>
             </div>
         </div>
         <button onclick="dealCards()" style="width:100%; padding:15px; background:var(--good); border:none; border-radius:12px; color:white; font-weight:bold;">🎲 生成座位與發牌</button>
@@ -84,39 +84,55 @@
         <div id="camp-tag" style="display:inline-block; padding:4px 15px; border-radius:20px; font-size:12px; color:#fff; margin-bottom:20px;"></div>
         <div id="show-skill" style="text-align:left; font-size:0.9rem; line-height:1.6; color:#4b5563; border-top:1px solid #ccc; padding-top:15px;"></div>
     </div>
-    <button onclick="closeOverlay()" style="margin-top:40px; padding:12px 50px; border-radius:30px; border:1px solid #fff; background:none; color:#fff">我記住了</button>
+    <button onclick="closeOverlay()" style="margin-top:40px; padding:12px 50px; border-radius:30px; border:1px solid #fff; background:none; color:#fff">我看好了</button>
 </div>
 
 <div id="host-screen" class="overlay hidden">
     <h3 style="color:#fff">🔨 上帝全視角</h3>
     <div id="host-content" style="width:90%; max-height:70vh; overflow-y:auto; background:rgba(255,255,255,0.05); border-radius:15px;"></div>
-    <button onclick="closeOverlay()" style="margin-top:30px; padding:12px 50px; border-radius:30px; border:1px solid #666; background:none; color:#aaa">關閉</button>
+    <button onclick="closeOverlay()" style="margin-top:30px; padding:12px 50px; border-radius:30px; border:1px solid #666; background:none; color:#aaa">返回</button>
+</div>
+
+<div id="share-modal" class="overlay hidden">
+    <div style="background:white; padding:30px; border-radius:20px; text-align:center; width:80%; max-width:350px;">
+        <h3>加入本局遊戲</h3>
+        <div id="qrcode" style="margin:20px auto"></div>
+        <button onclick="nativeShare()" style="width:100%; padding:12px; background:#e63946; color:white; border:none; border-radius:10px">分享本局連結 📤</button>
+        <button onclick="closeOverlay()" style="width:100%; margin-top:10px; padding:12px; background:#eee; border:none; border-radius:10px">關閉</button>
+    </div>
 </div>
 
 <script>
-// --- Firebase 設定 ---
 const ROOM_ID = "302";
 const firebaseConfig = { apiKey: "YOUR_API_KEY", databaseURL: "https://YOUR_PROJECT.firebaseio.com", projectId: "YOUR_PROJECT_ID" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// 16 個完整職位
 const wolfRoles = [
     {n: "狼人", c: "WOLF", s: "▶ 夜晚與狼隊商量擊殺一名玩家。"},
-    {n: "狼王", c: "WOLF", s: "▶ 出局後可開槍帶走一人。"},
-    {n: "白狼王", c: "WOLF", s: "▶ 白天可自爆帶走一人。"},
-    {n: "狼美人", c: "WOLF", s: "▶ 出局時魅惑對象殉情。"}
+    {n: "狼王", c: "WOLF", s: "▶ 出局後可以帶一名玩家出局。<br>↳ 被女巫毒死無法使用技能。"},
+    {n: "黑狼王", c: "WOLF", s: "▶ 出局後可以帶一名玩家出局。"},
+    {n: "白狼王", c: "WOLF", s: "▶ 白天可以自爆並帶走一名玩家。"},
+    {n: "狼美人", c: "WOLF", s: "▶ 出局時魅惑對象隨之殉情。"},
+    {n: "機械狼", c: "WOLF", s: "▶ 可學習一名玩家技能並使用。"},
+    {n: "惡靈騎士", c: "WOLF", s: "▶ 反彈技能且夜晚不死。"},
+    {n: "種狼", c: "WOLF", s: "▶ 可將一名玩家感染成狼人。"}
 ];
 const goodRoles = [
     {n: "預言家", c: "GOOD", s: "▶ 每晚可以查驗一名玩家的陣營。"},
-    {n: "女巫", c: "GOOD", s: "▶ 擁有一瓶解藥與毒藥。"},
-    {n: "獵人", c: "GOOD", s: "▶ 出局後可開槍。被女巫毒死無技能。"},
-    {n: "守衛", c: "GOOD", s: "▶ 每晚守護一人，不可連守。"},
-    {n: "平民", c: "GOOD", s: "▶ 無技能，認真表水獲勝。"}
+    {n: "女巫", c: "GOOD", s: "▶ 擁有一瓶解藥與毒藥。<br>↳ 女巫全程不可自救。"},
+    {n: "獵人", c: "GOOD", s: "▶ 出局後可以帶一名玩家出局。<br>↳ 可以選擇不使用技能。<br>↳ 被女巫毒死和狼美人睡死無法使用。"},
+    {n: "守衛", c: "GOOD", s: "▶ 每晚可以守護一人，不可連守。"},
+    {n: "騎士", c: "GOOD", s: "▶ 白天可決鬥，狼死或騎士死。"},
+    {n: "魔術師", c: "GOOD", s: "▶ 每晚交換兩名玩家狀態。"},
+    {n: "攝夢人", c: "GOOD", s: "▶ 每晚守護一人，連夢兩次則死。"},
+    {n: "平民", c: "GOOD", s: "▶ 無特殊技能，請表水獲勝。"}
 ];
 
 let counts = {};
 let currentDeck = [];
-let deaths = []; // 存儲死亡狀態
+let deaths = [];
 let userIdentity = localStorage.getItem('userIdentity');
 
 function init() {
@@ -124,8 +140,7 @@ function init() {
         counts[r.n] = 0;
         const target = r.c === "WOLF" ? 'wolf-list' : 'good-list';
         const div = document.createElement('div'); div.className = 'role-row';
-        div.style = "display:flex; justify-content:space-between; margin:5px 0; font-size:12px";
-        div.innerHTML = `<span>${r.n}</span><div><button onclick="upd('${r.n}',-1)">-</button><span id="v-${r.n}" style="margin:0 5px">0</span><button onclick="upd('${r.n}',1)">+</button></div>`;
+        div.innerHTML = `<span>${r.n}</span><div><button class="btn-c" onclick="upd('${r.n}',-1)">-</button><span id="v-${r.n}" style="margin:0 8px">0</span><button class="btn-c" onclick="upd('${r.n}',1)">+</button></div>`;
         document.getElementById(target).appendChild(div);
     });
     listen();
@@ -136,7 +151,7 @@ function upd(n, d) { counts[n] = Math.max(0, counts[n] + d); document.getElement
 function dealCards() {
     let deck = [];
     for (let n in counts) { for (let i = 0; i < counts[n]; i++) deck.push(n); }
-    if (deck.length === 0) return alert("請配置人數");
+    if (deck.length === 0) return alert("請先配置角色");
     deck.sort(() => Math.random() - 0.5);
     db.ref('w_rooms/' + ROOM_ID).set({ roles: deck, deaths: new Array(deck.length).fill(false), timestamp: Date.now() });
 }
@@ -163,47 +178,16 @@ function renderUI() {
         btn.className = 'seat-btn';
         btn.innerText = `${i+1} 號玩家 點我看牌`;
         
-        // --- 核心邏輯：鎖定機制 ---
         if (userIdentity === `P_${i}`) {
-            btn.classList.add('my-choice'); // 自己選的號碼
+            btn.classList.add('my-choice');
             btn.onclick = () => showCard(r);
-        } else if (userIdentity && userIdentity !== 'HOST') {
-            btn.disabled = true; // 只要選過號碼，其他按鈕全部鎖死變灰
-        } else if (userIdentity === 'HOST') {
-            btn.disabled = true; // 主持人不能領牌
+        } else if (userIdentity) {
+            btn.disabled = true;
         } else {
-            btn.onclick = () => {
-                if(confirm(`確認鎖定 ${i+1} 號？鎖定後無法更改。`)) {
-                    userIdentity=`P_${i}`;
-                    localStorage.setItem('userIdentity', userIdentity);
-                    renderUI();
-                    showCard(r);
-                }
-            };
+            btn.onclick = () => { if(confirm(`鎖定 ${i+1} 號？`)) { userIdentity=`P_${i}`; localStorage.setItem('userIdentity', userIdentity); renderUI(); showCard(r); } };
         }
         grid.appendChild(btn);
     });
-}
-
-// 主持人全視角名單
-function openHostList() {
-    const container = document.getElementById('host-content');
-    container.innerHTML = currentDeck.map((r, i) => `
-        <div class="host-item">
-            <div style="${deaths[i] ? 'text-decoration:line-through; color:#666' : ''}">
-                <span style="color:var(--good)">${i+1} 號</span>：<strong>${r}</strong>
-            </div>
-            <button class="death-btn ${deaths[i] ? 'dead' : ''}" onclick="toggleDeath(${i})">
-                ${deaths[i] ? '💀 復活' : '💀 死亡'}
-            </button>
-        </div>
-    `).join('');
-    document.getElementById('host-screen').classList.remove('hidden');
-}
-
-function toggleDeath(index) {
-    deaths[index] = !deaths[index];
-    db.ref('w_rooms/' + ROOM_ID + '/deaths').set(deaths);
 }
 
 function showCard(name) {
@@ -216,9 +200,10 @@ function showCard(name) {
     document.getElementById('reveal-screen').classList.remove('hidden');
 }
 
-function selectHostMode() { if(confirm("進入主持人模式？")) { userIdentity='HOST'; localStorage.setItem('userIdentity','HOST'); renderUI(); openHostList(); } }
-function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
-init();
-</script>
-</body>
-</html>
+function openHostList() {
+    const container = document.getElementById('host-content');
+    container.innerHTML = currentDeck.map((r, i) => `
+        <div class="host-item">
+            <div style="${deaths[i] ? 'text-decoration:line-through; color:#666' : ''}">
+                <span style="color:var(--good)">${i+1} 號</span>：<strong>${r}</strong>
+            </div>

@@ -13,7 +13,7 @@
         .app-card { background: var(--card-bg); backdrop-filter: blur(10px); width: 100%; max-width: 500px; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; margin: auto; }
         .config-box { background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 10px; margin-bottom: 15px; }
         .role-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; padding: 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); font-size: 13px; }
-        .btn-c { background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+        .btn-c { background: rgba(255,255,255,0.1); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; }
         .seat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
         .seat-btn { background: #3d3434; border: none; border-radius: 12px; height: 60px; color: white; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 0 #222; }
         .seat-btn.my-choice { background: #555; border: 2px solid #fff; box-shadow: 0 0 15px var(--good); }
@@ -25,7 +25,6 @@
         .death-btn.dead { background: var(--wolf); }
         .share-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #e63946; color: white; padding: 16px 0; text-align: center; font-weight: bold; cursor: pointer; z-index: 500; }
         .hidden { display: none !important; }
-        .main-btn { width: 100%; padding: 15px; background: var(--good); border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -35,15 +34,33 @@
         <h3 style="text-align:center">🛠️ 遊戲配置</h3>
         <div style="display:flex; gap:10px;">
             <div style="flex:1;">
-                <div style="text-align:center; color:var(--wolf); font-size:12px; font-weight:bold; margin-bottom:5px;">🐺 狼人</div>
-                <div class="config-box" id="wolf-list"></div>
+                <div style="text-align:center; color:var(--wolf); font-size:12px; font-weight:bold; margin-bottom:5px;">🐺 狼人陣營</div>
+                <div class="config-box" id="wolf-list">
+                    <div class="role-row"><span>狼人</span><div><button class="btn-c" onclick="upd('狼人',-1)">-</button><span id="v-狼人">0</span><button class="btn-c" onclick="upd('狼人',1)">+</button></div></div>
+                    <div class="role-row"><span>狼王</span><div><button class="btn-c" onclick="upd('狼王',-1)">-</button><span id="v-狼王">0</span><button class="btn-c" onclick="upd('狼王',1)">+</button></div></div>
+                    <div class="role-row"><span>黑狼王</span><div><button class="btn-c" onclick="upd('黑狼王',-1)">-</button><span id="v-黑狼王">0</span><button class="btn-c" onclick="upd('黑狼王',1)">+</button></div></div>
+                    <div class="role-row"><span>白狼王</span><div><button class="btn-c" onclick="upd('白狼王',-1)">-</button><span id="v-白狼王">0</span><button class="btn-c" onclick="upd('白狼王',1)">+</button></div></div>
+                    <div class="role-row"><span>狼美人</span><div><button class="btn-c" onclick="upd('狼美人',-1)">-</button><span id="v-狼美人">0</span><button class="btn-c" onclick="upd('狼美人',1)">+</button></div></div>
+                    <div class="role-row"><span>機械狼</span><div><button class="btn-c" onclick="upd('機械狼',-1)">-</button><span id="v-機械狼">0</span><button class="btn-c" onclick="upd('機械狼',1)">+</button></div></div>
+                    <div class="role-row"><span>惡靈騎士</span><div><button class="btn-c" onclick="upd('惡靈騎士',-1)">-</button><span id="v-惡靈騎士">0</span><button class="btn-c" onclick="upd('惡靈騎士',1)">+</button></div></div>
+                    <div class="role-row"><span>種狼</span><div><button class="btn-c" onclick="upd('種狼',-1)">-</button><span id="v-種狼">0</span><button class="btn-c" onclick="upd('種狼',1)">+</button></div></div>
+                </div>
             </div>
             <div style="flex:1;">
-                <div style="text-align:center; color:var(--good); font-size:12px; font-weight:bold; margin-bottom:5px;">😇 好人</div>
-                <div class="config-box" id="good-list"></div>
+                <div style="text-align:center; color:var(--good); font-size:12px; font-weight:bold; margin-bottom:5px;">😇 好人陣營</div>
+                <div class="config-box" id="good-list">
+                    <div class="role-row"><span>預言家</span><div><button class="btn-c" onclick="upd('預言家',-1)">-</button><span id="v-預言家">0</span><button class="btn-c" onclick="upd('預言家',1)">+</button></div></div>
+                    <div class="role-row"><span>女巫</span><div><button class="btn-c" onclick="upd('女巫',-1)">-</button><span id="v-女巫">0</span><button class="btn-c" onclick="upd('女巫',1)">+</button></div></div>
+                    <div class="role-row"><span>獵人</span><div><button class="btn-c" onclick="upd('獵人',-1)">-</button><span id="v-獵人">0</span><button class="btn-c" onclick="upd('獵人',1)">+</button></div></div>
+                    <div class="role-row"><span>守衛</span><div><button class="btn-c" onclick="upd('守衛',-1)">-</button><span id="v-守衛">0</span><button class="btn-c" onclick="upd('守衛',1)">+</button></div></div>
+                    <div class="role-row"><span>騎士</span><div><button class="btn-c" onclick="upd('騎士',-1)">-</button><span id="v-騎士">0</span><button class="btn-c" onclick="upd('騎士',1)">+</button></div></div>
+                    <div class="role-row"><span>魔術師</span><div><button class="btn-c" onclick="upd('魔術師',-1)">-</button><span id="v-魔術師">0</span><button class="btn-c" onclick="upd('魔術師',1)">+</button></div></div>
+                    <div class="role-row"><span>攝夢人</span><div><button class="btn-c" onclick="upd('攝夢人',-1)">-</button><span id="v-攝夢人">0</span><button class="btn-c" onclick="upd('攝夢人',1)">+</button></div></div>
+                    <div class="role-row"><span>平民</span><div><button class="btn-c" onclick="upd('平民',-1)">-</button><span id="v-平民">0</span><button class="btn-c" onclick="upd('平民',1)">+</button></div></div>
+                </div>
             </div>
         </div>
-        <button onclick="dealCards()" class="main-btn">🎲 生成座位與發牌</button>
+        <button onclick="dealCards()" style="width:100%; padding:15px; background:var(--good); border:none; border-radius:12px; color:white; font-weight:bold;">🎲 生成座位與發牌</button>
     </div>
 
     <div id="game-ui" class="hidden">
@@ -79,127 +96,117 @@
 </div>
 
 <script>
-// 請替換為你自己的 Firebase 金鑰
-const firebaseConfig = { apiKey: "AIza...", databaseURL: "https://your-db.firebaseio.com", projectId: "your-id" };
+const ROOM_ID = "302";
+const firebaseConfig = { apiKey: "YOUR_API_KEY", databaseURL: "https://YOUR_PROJECT.firebaseio.com", projectId: "YOUR_PROJECT_ID" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const allRoles = {
-    "狼人": {c: "WOLF", s: "▶ 夜晚與狼隊商量擊殺一名玩家。"}, "狼王": {c: "WOLF", s: "▶ 出局後可帶一人。"},
-    "黑狼王": {c: "WOLF", s: "▶ 出局後可帶一人。"}, "白狼王": {c: "WOLF", s: "▶ 白天可自爆帶人。"},
-    "狼美人": {c: "WOLF", s: "▶ 出局魅惑對象殉情。"}, "機械狼": {c: "WOLF", s: "▶ 可學習技能。"},
-    "惡靈騎士": {c: "WOLF", s: "▶ 反彈技能且夜晚不死。"}, "種狼": {c: "WOLF", s: "▶ 可感染玩家。"},
-    "預言家": {c: "GOOD", s: "▶ 每晚查驗陣營。"}, "女巫": {c: "GOOD", s: "▶ 擁有一瓶解藥與毒藥。"},
-    "獵人": {c: "GOOD", s: "▶ 出局後可帶一人。"}, "守衛": {c: "GOOD", s: "▶ 每晚守護一人。"},
-    "騎士": {c: "GOOD", s: "▶ 白天可發起決鬥。"}, "魔術師": {c: "GOOD", s: "▶ 每晚交換兩人狀態。"},
-    "攝夢人": {c: "GOOD", s: "▶ 每晚守護一人。"}, "平民": {c: "GOOD", s: "▶ 無特殊技能。"}
+    "狼人": {c: "WOLF", s: "▶ 夜晚與狼隊商量擊殺一名玩家。"},
+    "狼王": {c: "WOLF", s: "▶ 出局後可以帶一名玩家出局。<br>↳ 被女巫毒死無法使用技能。"},
+    "黑狼王": {c: "WOLF", s: "▶ 出局後可以帶一名玩家出局。"},
+    "白狼王": {c: "WOLF", s: "▶ 白天可以自爆並帶走一名玩家。"},
+    "狼美人": {c: "WOLF", s: "▶ 出局時魅惑對象隨之殉情。"},
+    "機械狼": {c: "WOLF", s: "▶ 可學習一名玩家技能並使用。"},
+    "惡靈騎士": {c: "WOLF", s: "▶ 反彈技能且夜晚不死。"},
+    "種狼": {c: "WOLF", s: "▶ 可將一名玩家感染成狼人。"},
+    "預言家": {c: "GOOD", s: "▶ 每晚可以查驗一名玩家的陣營。"},
+    "女巫": {c: "GOOD", s: "▶ 擁有一瓶解藥與毒藥。<br>↳ 女巫全程不可自救。"},
+    "獵人": {c: "GOOD", s: "▶ 出局後可以帶一名玩家出局。"},
+    "守衛": {c: "GOOD", s: "▶ 每晚可以守護一人，不可連守。"},
+    "騎士": {c: "GOOD", s: "▶ 白天可決鬥，狼死或騎士死。"},
+    "魔術師": {c: "GOOD", s: "▶ 每晚交換兩名玩家狀態。"},
+    "攝夢人": {c: "GOOD", s: "▶ 每晚守護一人，連夢兩次則死。"},
+    "平民": {c: "GOOD", s: "▶ 無特殊技能，請表水獲勝。"}
 };
 
 let counts = {};
-// 自動生成 HTML 結構，避免 ID 錯誤
-function initSetup() {
-    const wList = document.getElementById('wolf-list');
-    const gList = document.getElementById('good-list');
-    Object.keys(allRoles).forEach(name => {
-        counts[name] = 0;
-        const html = `<div class="role-row"><span>${name}</span><div><button class="btn-c" onclick="upd('${name}',-1)">-</button><span id="v-${name}" style="margin:0 8px">0</span><button class="btn-c" onclick="upd('${name}',1)">+</button></div></div>`;
-        if (allRoles[name].c === "WOLF") wList.innerHTML += html;
-        else gList.innerHTML += html;
-    });
-}
-initSetup();
-
+Object.keys(allRoles).forEach(name => counts[name] = 0);
 function upd(n, d) { counts[n] = Math.max(0, counts[n] + d); document.getElementById('v-' + n).innerText = counts[n]; }
 
 function dealCards() {
     let deck = [];
-    Object.keys(counts).forEach(n => { for(let i=0; i<counts[n]; i++) deck.push(n); });
-    if (deck.length === 0) return alert("請先配置角色數量！");
-    
+    for (let n in counts) { for (let i = 0; i < counts[n]; i++) deck.push(n); }
+    if (deck.length === 0) return alert("請先配置角色數量");
     deck.sort(() => Math.random() - 0.5);
-    const rid = Date.now().toString();
-    
-    // 嘗試寫入資料庫，失敗也會強制換頁方便測試
-    db.ref('w_rooms/' + rid).set({ roles: deck, deaths: new Array(deck.length).fill(false) })
-    .then(() => { window.location.search = '?room=' + rid; })
-    .catch(e => { 
-        console.error(e);
-        alert("資料庫未設定，將進入離線測試模式");
-        // 離線模擬邏輯
-        sessionStorage.setItem('offline_room', JSON.stringify({roles: deck, deaths: new Array(deck.length).fill(false)}));
-        window.location.search = '?room=offline';
-    });
+    db.ref('w_rooms/' + ROOM_ID).set({ roles: deck, deaths: new Array(deck.length).fill(false), timestamp: Date.now() });
 }
 
-const urlParams = new URLSearchParams(window.location.search);
-const ROOM_ID = urlParams.get('room');
+let currentDeck = [];
+let deaths = [];
+let userIdentity = localStorage.getItem('userIdentity');
 
-if (ROOM_ID) {
+db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
+    const data = snap.val(); if (!data) return;
+    if (localStorage.getItem('lastTime') != data.timestamp) { localStorage.removeItem('userIdentity'); userIdentity = null; }
+    localStorage.setItem('lastTime', data.timestamp);
+    currentDeck = data.roles; deaths = data.deaths || [];
     document.getElementById('setup-ui').classList.add('hidden');
     document.getElementById('game-ui').classList.remove('hidden');
     document.getElementById('share-trigger').classList.remove('hidden');
-    
-    if (ROOM_ID === 'offline') {
-        const data = JSON.parse(sessionStorage.getItem('offline_room'));
-        currentDeck = data.roles; deaths = data.deaths; renderUI();
-    } else {
-        db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
-            const data = snap.val(); if (!data) return;
-            currentDeck = data.roles; deaths = data.deaths || [];
-            renderUI();
-        });
-    }
-}
-
-let currentDeck = [], deaths = [];
-let userIdentity = localStorage.getItem('userIdentity_' + ROOM_ID);
+    renderUI();
+});
 
 function renderUI() {
     const grid = document.getElementById('seat-grid');
     grid.innerHTML = "";
     const hostBtn = document.getElementById('host-master-btn');
-    if (userIdentity && userIdentity.startsWith('P_')) hostBtn.classList.add('hidden');
-    
+
+    // 如果已經是玩家身分，直接隱藏上帝視角按鈕
+    if (userIdentity && userIdentity.startsWith('P_')) {
+        hostBtn.classList.add('hidden');
+    } else {
+        hostBtn.classList.remove('hidden');
+    }
+
     currentDeck.forEach((r, i) => {
         const btn = document.createElement('button');
-        btn.className = 'seat-btn' + (userIdentity === `P_${i}` ? ' my-choice' : '');
-        btn.innerText = (userIdentity === `P_${i}`) ? `${i+1} 號 (我的身分)` : `${i+1} 號玩家`;
-        btn.disabled = !!(userIdentity && userIdentity !== `P_${i}`);
-        btn.onclick = () => {
-            if (!userIdentity) {
-                if(confirm(`鎖定 ${i+1} 號？`)) { 
-                    userIdentity=`P_${i}`; localStorage.setItem('userIdentity_' + ROOM_ID, userIdentity); renderUI(); showCard(r); 
-                }
-            } else { showCard(r); }
-        };
+        btn.className = 'seat-btn';
+        btn.innerText = `${i+1} 號玩家 點我看牌`;
+        if (userIdentity === `P_${i}`) {
+            btn.classList.add('my-choice'); btn.onclick = () => showCard(r);
+        } else if (userIdentity) {
+            btn.disabled = true;
+        } else {
+            btn.onclick = () => { 
+                if(confirm(`鎖定 ${i+1} 號？鎖定後無法看別人的牌，且不能當主持人。`)) { 
+                    userIdentity=`P_${i}`; localStorage.setItem('userIdentity', userIdentity); renderUI(); showCard(r); 
+                } 
+            };
+        }
         grid.appendChild(btn);
     });
+    if (document.getElementById('host-screen').classList.contains('hidden') === false) renderHostContent();
 }
 
 function showCard(name) {
     const data = allRoles[name];
     document.getElementById('show-role').innerText = name;
     const tag = document.getElementById('camp-tag');
-    tag.innerText = data.c === "WOLF" ? "🐺 狼人陣營" : "😇 好人陣營";
+    tag.innerText = data.c === "WOLF" ? "🐺 狼人陣營-邪惡" : "😇 好人陣營-神職";
     tag.style.background = data.c === "WOLF" ? "#ef4444" : "#3b82f6";
     document.getElementById('show-skill').innerHTML = data.s;
     document.getElementById('reveal-screen').classList.remove('hidden');
 }
 
 function openHostList() {
+    renderHostContent();
+    document.getElementById('host-screen').classList.remove('hidden');
+}
+
+function renderHostContent() {
     const container = document.getElementById('host-content');
     container.innerHTML = currentDeck.map((r, i) => `
         <div class="host-item">
             <div style="${deaths[i] ? 'text-decoration:line-through; color:#666' : ''}">${i+1} 號：<strong>${r}</strong></div>
-            <button class="death-btn ${deaths[i] ? 'dead' : ''}" onclick="toggleDeath(${i})">${deaths[i] ? '復活' : '標記死亡'}</button>
+            <button class="death-btn ${deaths[i] ? 'dead' : ''}" onclick="toggleDeath(${i})">${deaths[i] ? '💀 復活' : '💀 死亡'}</button>
         </div>`).join('');
-    document.getElementById('host-screen').classList.remove('hidden');
 }
 
-function toggleDeath(i) {
-    deaths[i] = !deaths[i];
-    if (ROOM_ID === 'offline') { renderUI(); openHostList(); }
-    else db.ref('w_rooms/' + ROOM_ID + '/deaths').set(deaths);
+function toggleDeath(index) {
+    deaths[index] = !deaths[index];
+    db.ref('w_rooms/' + ROOM_ID + '/deaths').set(deaths);
+    // 直接更新，不跳視窗
 }
 
 function openShareModal() {
@@ -210,8 +217,8 @@ function openShareModal() {
 }
 
 function nativeShare() {
-    if(navigator.share) navigator.share({title:'狼人殺遊戲', url: window.location.href});
-    else alert("請複製連結：" + window.location.href);
+    if(navigator.share) navigator.share({title:'狼人殺遊戲房', url:window.location.href});
+    else alert("請複製網址分享：" + window.location.href);
 }
 
 function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }

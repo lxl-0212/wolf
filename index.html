@@ -96,7 +96,10 @@
 </div>
 
 <script>
-const ROOM_ID = "302";
+// --- 初始化與 Firebase ---
+const urlParams = new URLSearchParams(window.location.search);
+let ROOM_ID = urlParams.get('room') || "302"; // 自動從網址抓房間號，沒抓到才用預設
+
 const firebaseConfig = { apiKey: "YOUR_API_KEY", databaseURL: "https://YOUR_PROJECT.firebaseio.com", projectId: "YOUR_PROJECT_ID" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -129,17 +132,21 @@ function dealCards() {
     for (let n in counts) { for (let i = 0; i < counts[n]; i++) deck.push(n); }
     if (deck.length === 0) return alert("請先配置角色數量");
     deck.sort(() => Math.random() - 0.5);
+    // 生成新的房間時間戳，確保網址唯一性
+    ROOM_ID = Date.now().toString(); 
     db.ref('w_rooms/' + ROOM_ID).set({ roles: deck, deaths: new Array(deck.length).fill(false), timestamp: Date.now() });
+    
+    // 更新當前網址但不重新整理，方便房主直接複製
+    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + ROOM_ID;
+    window.history.pushState({path:newUrl},'',newUrl);
 }
 
 let currentDeck = [];
 let deaths = [];
-let userIdentity = localStorage.getItem('userIdentity');
+let userIdentity = localStorage.getItem('userIdentity_' + ROOM_ID); // 房間分開存身分
 
 db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
     const data = snap.val(); if (!data) return;
-    if (localStorage.getItem('lastTime') != data.timestamp) { localStorage.removeItem('userIdentity'); userIdentity = null; }
-    localStorage.setItem('lastTime', data.timestamp);
     currentDeck = data.roles; deaths = data.deaths || [];
     document.getElementById('setup-ui').classList.add('hidden');
     document.getElementById('game-ui').classList.remove('hidden');
@@ -152,7 +159,6 @@ function renderUI() {
     grid.innerHTML = "";
     const hostBtn = document.getElementById('host-master-btn');
 
-    // 如果已經是玩家身分，直接隱藏上帝視角按鈕
     if (userIdentity && userIdentity.startsWith('P_')) {
         hostBtn.classList.add('hidden');
     } else {
@@ -170,13 +176,12 @@ function renderUI() {
         } else {
             btn.onclick = () => { 
                 if(confirm(`鎖定 ${i+1} 號？鎖定後無法看別人的牌，且不能當主持人。`)) { 
-                    userIdentity=`P_${i}`; localStorage.setItem('userIdentity', userIdentity); renderUI(); showCard(r); 
+                    userIdentity=`P_${i}`; localStorage.setItem('userIdentity_' + ROOM_ID, userIdentity); renderUI(); showCard(r); 
                 } 
             };
         }
         grid.appendChild(btn);
     });
-    if (document.getElementById('host-screen').classList.contains('hidden') === false) renderHostContent();
 }
 
 function showCard(name) {
@@ -206,19 +211,22 @@ function renderHostContent() {
 function toggleDeath(index) {
     deaths[index] = !deaths[index];
     db.ref('w_rooms/' + ROOM_ID + '/deaths').set(deaths);
-    // 直接更新，不跳視窗
+    renderHostContent(); // 即時刷新列表
 }
 
 function openShareModal() {
     document.getElementById('share-modal').classList.remove('hidden');
     const qrDiv = document.getElementById('qrcode');
     qrDiv.innerHTML = "";
-    new QRCode(qrDiv, { text: window.location.href, width: 160, height: 160 });
+    // 網址包含房間 ID
+    const shareUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + ROOM_ID;
+    new QRCode(qrDiv, { text: shareUrl, width: 160, height: 160 });
 }
 
 function nativeShare() {
-    if(navigator.share) navigator.share({title:'狼人殺遊戲房', url:window.location.href});
-    else alert("請複製網址分享：" + window.location.href);
+    const shareUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + ROOM_ID;
+    if(navigator.share) navigator.share({title:'狼人殺遊戲房', url: shareUrl});
+    else alert("請複製網址分享：" + shareUrl);
 }
 
 function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }

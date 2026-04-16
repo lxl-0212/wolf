@@ -6,49 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
     <style>
-        :root {
-            --bg: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --wolf: #ef4444;
-            --good: #3b82f6;
-            --text: #f1f5f9;
-        }
-
-        body {
-            font-family: 'PingFang TC', sans-serif;
-            background: radial-gradient(circle at top, #1e293b, #0f172a);
-            color: var(--text);
-            margin: 0; padding: 10px;
-            display: flex; justify-content: center;
-            min-height: 100vh;
-        }
-
+        :root { --bg: #0f172a; --card-bg: rgba(30, 41, 59, 0.7); --wolf: #ef4444; --good: #3b82f6; --text: #f1f5f9; }
+        body { font-family: 'PingFang TC', sans-serif; background: radial-gradient(circle at top, #1e293b, #0f172a); color: var(--text); margin: 0; padding: 10px; min-height: 100vh; display: flex; align-items: center; }
         .app-card { background: var(--card-bg); backdrop-filter: blur(10px); width: 100%; max-width: 500px; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; margin: auto; }
-        
         .config-box { background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 10px; margin-bottom: 15px; }
-        .role-row { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; padding: 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); }
+        .role-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; padding: 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); font-size: 13px; }
         .btn-c { background: rgba(255,255,255,0.1); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; }
-
         .seat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
-        .seat-btn { 
-            background: #3d3434; border: none; border-radius: 12px; height: 60px; 
-            color: white; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 0 #222;
-        }
-        .seat-btn.my-choice { background: #555; border: 2px solid #fff; box-shadow: 0 0 15px var(--good); }
-        .seat-btn:disabled:not(.my-choice) { opacity: 0.2; filter: grayscale(1); }
-
+        .seat-btn { background: #3d3434; border: none; border-radius: 12px; height: 60px; color: white; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 0 #222; }
+        .seat-btn.my-choice { background: #555; border: 2px solid #fff; }
+        .seat-btn:disabled:not(.my-choice) { opacity: 0.2; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .identity-card { background: #e5e7eb; width: 85%; max-width: 380px; border-radius: 20px; padding: 35px; color: #333; text-align: center; }
-        .role-title { font-size: 2.5rem; font-weight: 900; color: #1f2937; margin: 10px 0; }
-        
         .host-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .death-btn { background: #444; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
-        .death-btn.dead { background: var(--wolf); color: #fff; }
-
-        .share-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #e63946; color: white; padding: 16px 0; text-align: center; font-weight: bold; cursor: pointer; z-index: 500; }
+        .death-btn { background: #444; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+        .death-btn.dead { background: var(--wolf); }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -57,14 +30,32 @@
 <div class="app-card">
     <div id="setup-ui">
         <h3 style="text-align:center">🛠️ 遊戲配置</h3>
-        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+        <div style="display:flex; gap:10px;">
             <div style="flex:1;">
-                <div style="text-align:center; color:var(--wolf); font-size:12px; font-weight:bold;">🐺 狼人陣營</div>
-                <div id="wolf-list" class="config-box"></div>
+                <div style="text-align:center; color:var(--wolf); font-size:12px; font-weight:bold; margin-bottom:5px;">🐺 狼人陣營</div>
+                <div class="config-box" id="wolf-list">
+                    <div class="role-row"><span>狼人</span><div><button class="btn-c" onclick="upd('狼人',-1)">-</button><span id="v-狼人">0</span><button class="btn-c" onclick="upd('狼人',1)">+</button></div></div>
+                    <div class="role-row"><span>狼王</span><div><button class="btn-c" onclick="upd('狼王',-1)">-</button><span id="v-狼王">0</span><button class="btn-c" onclick="upd('狼王',1)">+</button></div></div>
+                    <div class="role-row"><span>黑狼王</span><div><button class="btn-c" onclick="upd('黑狼王',-1)">-</button><span id="v-黑狼王">0</span><button class="btn-c" onclick="upd('黑狼王',1)">+</button></div></div>
+                    <div class="role-row"><span>白狼王</span><div><button class="btn-c" onclick="upd('白狼王',-1)">-</button><span id="v-白狼王">0</span><button class="btn-c" onclick="upd('白狼王',1)">+</button></div></div>
+                    <div class="role-row"><span>狼美人</span><div><button class="btn-c" onclick="upd('狼美人',-1)">-</button><span id="v-狼美人">0</span><button class="btn-c" onclick="upd('狼美人',1)">+</button></div></div>
+                    <div class="role-row"><span>機械狼</span><div><button class="btn-c" onclick="upd('機械狼',-1)">-</button><span id="v-機械狼">0</span><button class="btn-c" onclick="upd('機械狼',1)">+</button></div></div>
+                    <div class="role-row"><span>惡靈騎士</span><div><button class="btn-c" onclick="upd('惡靈騎士',-1)">-</button><span id="v-惡靈騎士">0</span><button class="btn-c" onclick="upd('惡靈騎士',1)">+</button></div></div>
+                    <div class="role-row"><span>種狼</span><div><button class="btn-c" onclick="upd('種狼',-1)">-</button><span id="v-種狼">0</span><button class="btn-c" onclick="upd('種狼',1)">+</button></div></div>
+                </div>
             </div>
             <div style="flex:1;">
-                <div style="text-align:center; color:var(--good); font-size:12px; font-weight:bold;">😇 好人陣營</div>
-                <div id="good-list" class="config-box"></div>
+                <div style="text-align:center; color:var(--good); font-size:12px; font-weight:bold; margin-bottom:5px;">😇 好人陣營</div>
+                <div class="config-box" id="good-list">
+                    <div class="role-row"><span>預言家</span><div><button class="btn-c" onclick="upd('預言家',-1)">-</button><span id="v-預言家">0</span><button class="btn-c" onclick="upd('預言家',1)">+</button></div></div>
+                    <div class="role-row"><span>女巫</span><div><button class="btn-c" onclick="upd('女巫',-1)">-</button><span id="v-女巫">0</span><button class="btn-c" onclick="upd('女巫',1)">+</button></div></div>
+                    <div class="role-row"><span>獵人</span><div><button class="btn-c" onclick="upd('獵人',-1)">-</button><span id="v-獵人">0</span><button class="btn-c" onclick="upd('獵人',1)">+</button></div></div>
+                    <div class="role-row"><span>守衛</span><div><button class="btn-c" onclick="upd('守衛',-1)">-</button><span id="v-守衛">0</span><button class="btn-c" onclick="upd('守衛',1)">+</button></div></div>
+                    <div class="role-row"><span>騎士</span><div><button class="btn-c" onclick="upd('騎士',-1)">-</button><span id="v-騎士">0</span><button class="btn-c" onclick="upd('騎士',1)">+</button></div></div>
+                    <div class="role-row"><span>魔術師</span><div><button class="btn-c" onclick="upd('魔術師',-1)">-</button><span id="v-魔術師">0</span><button class="btn-c" onclick="upd('魔術師',1)">+</button></div></div>
+                    <div class="role-row"><span>攝夢人</span><div><button class="btn-c" onclick="upd('攝夢人',-1)">-</button><span id="v-攝夢人">0</span><button class="btn-c" onclick="upd('攝夢人',1)">+</button></div></div>
+                    <div class="role-row"><span>平民</span><div><button class="btn-c" onclick="upd('平民',-1)">-</button><span id="v-平民">0</span><button class="btn-c" onclick="upd('平民',1)">+</button></div></div>
+                </div>
             </div>
         </div>
         <button onclick="dealCards()" style="width:100%; padding:15px; background:var(--good); border:none; border-radius:12px; color:white; font-weight:bold;">🎲 生成座位與發牌</button>
@@ -76,99 +67,73 @@
     </div>
 </div>
 
-<div id="share-trigger" class="share-bar hidden" onclick="openShareModal()">分享連結 / 掃碼</div>
-
 <div id="reveal-screen" class="overlay hidden">
     <div class="identity-card">
-        <div id="show-role" class="role-title"></div>
-        <div id="camp-tag" style="display:inline-block; padding:4px 15px; border-radius:20px; font-size:12px; color:#fff; margin-bottom:20px;"></div>
+        <div id="show-role" style="font-size:2.5rem; font-weight:900; color:#1f2937;"></div>
+        <div id="camp-tag" style="display:inline-block; padding:4px 15px; border-radius:20px; font-size:12px; color:#fff; margin:10px 0 20px 0;"></div>
         <div id="show-skill" style="text-align:left; font-size:0.9rem; line-height:1.6; color:#4b5563; border-top:1px solid #ccc; padding-top:15px;"></div>
     </div>
-    <button onclick="closeOverlay()" style="margin-top:40px; padding:12px 50px; border-radius:30px; border:1px solid #fff; background:none; color:#fff">我看好了</button>
+    <button onclick="closeOverlay()" style="margin-top:40px; padding:12px 50px; border-radius:30px; border:1px solid #fff; background:none; color:#fff">我記住了</button>
 </div>
 
 <div id="host-screen" class="overlay hidden">
     <h3 style="color:#fff">🔨 上帝全視角</h3>
     <div id="host-content" style="width:90%; max-height:70vh; overflow-y:auto; background:rgba(255,255,255,0.05); border-radius:15px;"></div>
-    <button onclick="closeOverlay()" style="margin-top:30px; padding:12px 50px; border-radius:30px; border:1px solid #666; background:none; color:#aaa">返回</button>
-</div>
-
-<div id="share-modal" class="overlay hidden">
-    <div style="background:white; padding:30px; border-radius:20px; text-align:center; width:80%; max-width:350px;">
-        <h3>加入本局遊戲</h3>
-        <div id="qrcode" style="margin:20px auto"></div>
-        <button onclick="nativeShare()" style="width:100%; padding:12px; background:#e63946; color:white; border:none; border-radius:10px">分享本局連結 📤</button>
-        <button onclick="closeOverlay()" style="width:100%; margin-top:10px; padding:12px; background:#eee; border:none; border-radius:10px">關閉</button>
-    </div>
+    <button onclick="closeOverlay()" style="margin-top:30px; padding:12px 50px; border-radius:30px; border:1px solid #666; background:none; color:#aaa">返回遊戲</button>
 </div>
 
 <script>
+// Firebase 配置 (請更換為你的正確資訊)
 const ROOM_ID = "302";
 const firebaseConfig = { apiKey: "YOUR_API_KEY", databaseURL: "https://YOUR_PROJECT.firebaseio.com", projectId: "YOUR_PROJECT_ID" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 16 個完整職位
-const wolfRoles = [
-    {n: "狼人", c: "WOLF", s: "▶ 夜晚與狼隊商量擊殺一名玩家。"},
-    {n: "狼王", c: "WOLF", s: "▶ 出局後可以帶一名玩家出局。<br>↳ 被女巫毒死無法使用技能。"},
-    {n: "黑狼王", c: "WOLF", s: "▶ 出局後可以帶一名玩家出局。"},
-    {n: "白狼王", c: "WOLF", s: "▶ 白天可以自爆並帶走一名玩家。"},
-    {n: "狼美人", c: "WOLF", s: "▶ 出局時魅惑對象隨之殉情。"},
-    {n: "機械狼", c: "WOLF", s: "▶ 可學習一名玩家技能並使用。"},
-    {n: "惡靈騎士", c: "WOLF", s: "▶ 反彈技能且夜晚不死。"},
-    {n: "種狼", c: "WOLF", s: "▶ 可將一名玩家感染成狼人。"}
-];
-const goodRoles = [
-    {n: "預言家", c: "GOOD", s: "▶ 每晚可以查驗一名玩家的陣營。"},
-    {n: "女巫", c: "GOOD", s: "▶ 擁有一瓶解藥與毒藥。<br>↳ 女巫全程不可自救。"},
-    {n: "獵人", c: "GOOD", s: "▶ 出局後可以帶一名玩家出局。<br>↳ 可以選擇不使用技能。<br>↳ 被女巫毒死和狼美人睡死無法使用。"},
-    {n: "守衛", c: "GOOD", s: "▶ 每晚可以守護一人，不可連守。"},
-    {n: "騎士", c: "GOOD", s: "▶ 白天可決鬥，狼死或騎士死。"},
-    {n: "魔術師", c: "GOOD", s: "▶ 每晚交換兩名玩家狀態。"},
-    {n: "攝夢人", c: "GOOD", s: "▶ 每晚守護一人，連夢兩次則死。"},
-    {n: "平民", c: "GOOD", s: "▶ 無特殊技能，請表水獲勝。"}
-];
+const allRoles = {
+    "狼人": {c: "WOLF", s: "▶ 夜晚與狼隊商量擊殺一名玩家。"},
+    "狼王": {c: "WOLF", s: "▶ 出局後可以帶一名玩家出局。<br>↳ 被女巫毒死無法使用技能。"},
+    "黑狼王": {c: "WOLF", s: "▶ 出局後可以帶一名玩家出局。"},
+    "白狼王": {c: "WOLF", s: "▶ 白天可以自爆並帶走一名玩家。"},
+    "狼美人": {c: "WOLF", s: "▶ 出局時魅惑對象隨之殉情。"},
+    "機械狼": {c: "WOLF", s: "▶ 可學習一名玩家技能並使用。"},
+    "惡靈騎士": {c: "WOLF", s: "▶ 反彈技能且夜晚不死。"},
+    "種狼": {c: "WOLF", s: "▶ 可將一名玩家感染成狼人。"},
+    "預言家": {c: "GOOD", s: "▶ 每晚可以查驗一名玩家的陣營。"},
+    "女巫": {c: "GOOD", s: "▶ 擁有一瓶解藥與毒藥。<br>↳ 女巫全程不可自救。"},
+    "獵人": {c: "GOOD", s: "▶ 出局後可以帶一名玩家出局。"},
+    "守衛": {c: "GOOD", s: "▶ 每晚可以守護一人，不可連守。"},
+    "騎士": {c: "GOOD", s: "▶ 白天可決鬥，狼死或騎士死。"},
+    "魔術師": {c: "GOOD", s: "▶ 每晚交換兩名玩家狀態。"},
+    "攝夢人": {c: "GOOD", s: "▶ 每晚守護一人，連夢兩次則死。"},
+    "平民": {c: "GOOD", s: "▶ 無特殊技能，請表水獲勝。"}
+};
 
 let counts = {};
-let currentDeck = [];
-let deaths = [];
-let userIdentity = localStorage.getItem('userIdentity');
-
-function init() {
-    [...wolfRoles, ...goodRoles].forEach(r => {
-        counts[r.n] = 0;
-        const target = r.c === "WOLF" ? 'wolf-list' : 'good-list';
-        const div = document.createElement('div'); div.className = 'role-row';
-        div.innerHTML = `<span>${r.n}</span><div><button class="btn-c" onclick="upd('${r.n}',-1)">-</button><span id="v-${r.n}" style="margin:0 8px">0</span><button class="btn-c" onclick="upd('${r.n}',1)">+</button></div>`;
-        document.getElementById(target).appendChild(div);
-    });
-    listen();
-}
+Object.keys(allRoles).forEach(name => counts[name] = 0);
 
 function upd(n, d) { counts[n] = Math.max(0, counts[n] + d); document.getElementById('v-' + n).innerText = counts[n]; }
 
 function dealCards() {
     let deck = [];
     for (let n in counts) { for (let i = 0; i < counts[n]; i++) deck.push(n); }
-    if (deck.length === 0) return alert("請先配置角色");
+    if (deck.length === 0) return alert("請先配置角色數量");
     deck.sort(() => Math.random() - 0.5);
     db.ref('w_rooms/' + ROOM_ID).set({ roles: deck, deaths: new Array(deck.length).fill(false), timestamp: Date.now() });
 }
 
-function listen() {
-    db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
-        const data = snap.val(); if (!data) return;
-        if (localStorage.getItem('lastTime') != data.timestamp) { localStorage.removeItem('userIdentity'); userIdentity = null; }
-        localStorage.setItem('lastTime', data.timestamp);
-        currentDeck = data.roles;
-        deaths = data.deaths || [];
-        document.getElementById('setup-ui').classList.add('hidden');
-        document.getElementById('game-ui').classList.remove('hidden');
-        document.getElementById('share-trigger').classList.remove('hidden');
-        renderUI();
-    });
-}
+let currentDeck = [];
+let deaths = [];
+let userIdentity = localStorage.getItem('userIdentity');
+
+db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
+    const data = snap.val(); if (!data) return;
+    if (localStorage.getItem('lastTime') != data.timestamp) { localStorage.removeItem('userIdentity'); userIdentity = null; }
+    localStorage.setItem('lastTime', data.timestamp);
+    currentDeck = data.roles; deaths = data.deaths || [];
+    document.getElementById('setup-ui').classList.add('hidden');
+    document.getElementById('game-ui').classList.remove('hidden');
+    renderUI();
+});
 
 function renderUI() {
     const grid = document.getElementById('seat-grid');
@@ -177,33 +142,42 @@ function renderUI() {
         const btn = document.createElement('button');
         btn.className = 'seat-btn';
         btn.innerText = `${i+1} 號玩家 點我看牌`;
-        
         if (userIdentity === `P_${i}`) {
-            btn.classList.add('my-choice');
-            btn.onclick = () => showCard(r);
+            btn.classList.add('my-choice'); btn.onclick = () => showCard(r);
         } else if (userIdentity) {
             btn.disabled = true;
         } else {
-            btn.onclick = () => { if(confirm(`鎖定 ${i+1} 號？`)) { userIdentity=`P_${i}`; localStorage.setItem('userIdentity', userIdentity); renderUI(); showCard(r); } };
+            btn.onclick = () => { if(confirm(`鎖定 ${i+1} 號？鎖定後無法看別人的牌。`)) { userIdentity=`P_${i}`; localStorage.setItem('userIdentity', userIdentity); renderUI(); showCard(r); } };
         }
         grid.appendChild(btn);
     });
 }
 
 function showCard(name) {
-    const roleData = [...wolfRoles, ...goodRoles].find(x => x.n === name);
+    const data = allRoles[name];
     document.getElementById('show-role').innerText = name;
     const tag = document.getElementById('camp-tag');
-    if (roleData.c === "WOLF") { tag.innerText = "🐺 狼人陣營-邪惡"; tag.style.background = "#ef4444"; }
-    else { tag.innerText = "😇 好人陣營-神職"; tag.style.background = "#3b82f6"; }
-    document.getElementById('show-skill').innerHTML = roleData.s;
+    tag.innerText = data.c === "WOLF" ? "🐺 狼人陣營-邪惡" : "😇 好人陣營-神職";
+    tag.style.background = data.c === "WOLF" ? "#ef4444" : "#3b82f6";
+    document.getElementById('show-skill').innerHTML = data.s;
     document.getElementById('reveal-screen').classList.remove('hidden');
 }
 
-function openHostList() {
-    const container = document.getElementById('host-content');
-    container.innerHTML = currentDeck.map((r, i) => `
-        <div class="host-item">
-            <div style="${deaths[i] ? 'text-decoration:line-through; color:#666' : ''}">
-                <span style="color:var(--good)">${i+1} 號</span>：<strong>${r}</strong>
-            </div>
+function selectHostMode() {
+    if(confirm("進入主持人模式？")) {
+        userIdentity='HOST'; localStorage.setItem('userIdentity','HOST');
+        const container = document.getElementById('host-content');
+        container.innerHTML = currentDeck.map((r, i) => `
+            <div class="host-item">
+                <div style="${deaths[i] ? 'text-decoration:line-through; color:#666' : ''}">${i+1} 號：<strong>${r}</strong></div>
+                <button class="death-btn ${deaths[i] ? 'dead' : ''}" onclick="toggleDeath(${i})">${deaths[i] ? '💀 復活' : '💀 死亡'}</button>
+            </div>`).join('');
+        document.getElementById('host-screen').classList.remove('hidden');
+    }
+}
+
+function toggleDeath(index) { deaths[index] = !deaths[index]; db.ref('w_rooms/' + ROOM_ID + '/deaths').set(deaths); selectHostMode(); }
+function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
+</script>
+</body>
+</html>

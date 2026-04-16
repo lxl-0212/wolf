@@ -38,26 +38,13 @@
                 <div class="config-box" id="wolf-list">
                     <div class="role-row"><span>狼人</span><div><button class="btn-c" onclick="upd('狼人',-1)">-</button><span id="v-狼人">0</span><button class="btn-c" onclick="upd('狼人',1)">+</button></div></div>
                     <div class="role-row"><span>狼王</span><div><button class="btn-c" onclick="upd('狼王',-1)">-</button><span id="v-狼王">0</span><button class="btn-c" onclick="upd('狼王',1)">+</button></div></div>
-                    <div class="role-row"><span>黑狼王</span><div><button class="btn-c" onclick="upd('黑狼王',-1)">-</button><span id="v-黑狼王">0</span><button class="btn-c" onclick="upd('黑狼王',1)">+</button></div></div>
-                    <div class="role-row"><span>白狼王</span><div><button class="btn-c" onclick="upd('白狼王',-1)">-</button><span id="v-白狼王">0</span><button class="btn-c" onclick="upd('白狼王',1)">+</button></div></div>
-                    <div class="role-row"><span>狼美人</span><div><button class="btn-c" onclick="upd('狼美人',-1)">-</button><span id="v-狼美人">0</span><button class="btn-c" onclick="upd('狼美人',1)">+</button></div></div>
-                    <div class="role-row"><span>機械狼</span><div><button class="btn-c" onclick="upd('機械狼',-1)">-</button><span id="v-機械狼">0</span><button class="btn-c" onclick="upd('機械狼',1)">+</button></div></div>
-                    <div class="role-row"><span>惡靈騎士</span><div><button class="btn-c" onclick="upd('惡靈騎士',-1)">-</button><span id="v-惡靈騎士">0</span><button class="btn-c" onclick="upd('惡靈騎士',1)">+</button></div></div>
-                    <div class="role-row"><span>種狼</span><div><button class="btn-c" onclick="upd('種狼',-1)">-</button><span id="v-種狼">0</span><button class="btn-c" onclick="upd('種狼',1)">+</button></div></div>
-                </div>
+                    </div>
             </div>
             <div style="flex:1;">
                 <div style="text-align:center; color:var(--good); font-size:12px; font-weight:bold; margin-bottom:5px;">😇 好人陣營</div>
                 <div class="config-box" id="good-list">
                     <div class="role-row"><span>預言家</span><div><button class="btn-c" onclick="upd('預言家',-1)">-</button><span id="v-預言家">0</span><button class="btn-c" onclick="upd('預言家',1)">+</button></div></div>
-                    <div class="role-row"><span>女巫</span><div><button class="btn-c" onclick="upd('女巫',-1)">-</button><span id="v-女巫">0</span><button class="btn-c" onclick="upd('女巫',1)">+</button></div></div>
-                    <div class="role-row"><span>獵人</span><div><button class="btn-c" onclick="upd('獵人',-1)">-</button><span id="v-獵人">0</span><button class="btn-c" onclick="upd('獵人',1)">+</button></div></div>
-                    <div class="role-row"><span>守衛</span><div><button class="btn-c" onclick="upd('守衛',-1)">-</button><span id="v-守衛">0</span><button class="btn-c" onclick="upd('守衛',1)">+</button></div></div>
-                    <div class="role-row"><span>騎士</span><div><button class="btn-c" onclick="upd('騎士',-1)">-</button><span id="v-騎士">0</span><button class="btn-c" onclick="upd('騎士',1)">+</button></div></div>
-                    <div class="role-row"><span>魔術師</span><div><button class="btn-c" onclick="upd('魔術師',-1)">-</button><span id="v-魔術師">0</span><button class="btn-c" onclick="upd('魔術師',1)">+</button></div></div>
-                    <div class="role-row"><span>攝夢人</span><div><button class="btn-c" onclick="upd('攝夢人',-1)">-</button><span id="v-攝夢人">0</span><button class="btn-c" onclick="upd('攝夢人',1)">+</button></div></div>
-                    <div class="role-row"><span>平民</span><div><button class="btn-c" onclick="upd('平民',-1)">-</button><span id="v-平民">0</span><button class="btn-c" onclick="upd('平民',1)">+</button></div></div>
-                </div>
+                    </div>
             </div>
         </div>
         <button onclick="dealCards()" style="width:100%; padding:15px; background:var(--good); border:none; border-radius:12px; color:white; font-weight:bold;">🎲 生成座位與發牌</button>
@@ -96,10 +83,20 @@
 </div>
 
 <script>
-const ROOM_ID = "302";
-const firebaseConfig = { apiKey: "YOUR_API_KEY", databaseURL: "https://YOUR_PROJECT.firebaseio.com", projectId: "YOUR_PROJECT_ID" };
+// --- 核心修正區：Firebase 與 房間邏輯 ---
+
+// 1. 請替換為你實際的 Firebase 金鑰
+const firebaseConfig = { 
+    apiKey: "YOUR_API_KEY", 
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com", 
+    projectId: "YOUR_PROJECT_ID" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+// 2. 自動從網址抓取 ROOM_ID
+const urlParams = new URLSearchParams(window.location.search);
+let ROOM_ID = urlParams.get('room'); 
 
 const allRoles = {
     "狼人": {c: "WOLF", s: "▶ 夜晚與狼隊商量擊殺一名玩家。"},
@@ -121,39 +118,52 @@ const allRoles = {
 };
 
 let counts = {};
-Object.keys(allRoles).forEach(name => counts[name] = 0);
+Object.keys(allRoles).forEach(n => counts[n] = 0);
 function upd(n, d) { counts[n] = Math.max(0, counts[n] + d); document.getElementById('v-' + n).innerText = counts[n]; }
 
+// 3. 生成發牌並導向新房間網址
 function dealCards() {
     let deck = [];
     for (let n in counts) { for (let i = 0; i < counts[n]; i++) deck.push(n); }
     if (deck.length === 0) return alert("請先配置角色數量");
     deck.sort(() => Math.random() - 0.5);
-    db.ref('w_rooms/' + ROOM_ID).set({ roles: deck, deaths: new Array(deck.length).fill(false), timestamp: Date.now() });
+    
+    // 生成隨機 6 位數房間碼
+    const newRoom = "R" + Math.floor(100000 + Math.random() * 900000);
+    
+    db.ref('w_rooms/' + newRoom).set({ 
+        roles: deck, 
+        deaths: new Array(deck.length).fill(false), 
+        timestamp: Date.now() 
+    }).then(() => {
+        // 發牌成功後自動更換網址，讓分享出去的連結帶有 room 參數
+        window.location.search = '?room=' + newRoom;
+    });
 }
 
-let currentDeck = [];
-let deaths = [];
-let userIdentity = localStorage.getItem('userIdentity');
+// 4. 初始化遊戲狀態監聽
+if (ROOM_ID) {
+    let userIdentity = localStorage.getItem('userIdentity_' + ROOM_ID);
+    
+    db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
+        const data = snap.val(); if (!data) return;
+        currentDeck = data.roles; deaths = data.deaths || [];
+        
+        document.getElementById('setup-ui').classList.add('hidden');
+        document.getElementById('game-ui').classList.remove('hidden');
+        document.getElementById('share-trigger').classList.remove('hidden');
+        renderUI(userIdentity);
+    });
+}
 
-db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
-    const data = snap.val(); if (!data) return;
-    if (localStorage.getItem('lastTime') != data.timestamp) { localStorage.removeItem('userIdentity'); userIdentity = null; }
-    localStorage.setItem('lastTime', data.timestamp);
-    currentDeck = data.roles; deaths = data.deaths || [];
-    document.getElementById('setup-ui').classList.add('hidden');
-    document.getElementById('game-ui').classList.remove('hidden');
-    document.getElementById('share-trigger').classList.remove('hidden');
-    renderUI();
-});
+let currentDeck = [], deaths = [];
 
-function renderUI() {
+function renderUI(userId) {
     const grid = document.getElementById('seat-grid');
     grid.innerHTML = "";
     const hostBtn = document.getElementById('host-master-btn');
 
-    // 如果已經是玩家身分，直接隱藏上帝視角按鈕
-    if (userIdentity && userIdentity.startsWith('P_')) {
+    if (userId && userId.startsWith('P_')) {
         hostBtn.classList.add('hidden');
     } else {
         hostBtn.classList.remove('hidden');
@@ -162,21 +172,24 @@ function renderUI() {
     currentDeck.forEach((r, i) => {
         const btn = document.createElement('button');
         btn.className = 'seat-btn';
-        btn.innerText = `${i+1} 號玩家 點我看牌`;
-        if (userIdentity === `P_${i}`) {
-            btn.classList.add('my-choice'); btn.onclick = () => showCard(r);
-        } else if (userIdentity) {
+        if (userId === `P_${i}`) {
+            btn.classList.add('my-choice'); 
+            btn.innerText = `${i+1} 號 (我的角色)`;
+            btn.onclick = () => showCard(r);
+        } else if (userId) {
+            btn.innerText = `${i+1} 號玩家`;
             btn.disabled = true;
         } else {
+            btn.innerText = `${i+1} 號玩家 點我看牌`;
             btn.onclick = () => { 
-                if(confirm(`鎖定 ${i+1} 號？鎖定後無法看別人的牌，且不能當主持人。`)) { 
-                    userIdentity=`P_${i}`; localStorage.setItem('userIdentity', userIdentity); renderUI(); showCard(r); 
+                if(confirm(`鎖定 ${i+1} 號？鎖定後無法看別人的牌。`)) { 
+                    localStorage.setItem('userIdentity_' + ROOM_ID, `P_${i}`);
+                    location.reload(); 
                 } 
             };
         }
         grid.appendChild(btn);
     });
-    if (document.getElementById('host-screen').classList.contains('hidden') === false) renderHostContent();
 }
 
 function showCard(name) {
@@ -206,7 +219,6 @@ function renderHostContent() {
 function toggleDeath(index) {
     deaths[index] = !deaths[index];
     db.ref('w_rooms/' + ROOM_ID + '/deaths').set(deaths);
-    // 直接更新，不跳視窗
 }
 
 function openShareModal() {

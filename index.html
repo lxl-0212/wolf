@@ -96,13 +96,17 @@
 </div>
 
 <script>
-// --- 初始化與 Firebase ---
-const urlParams = new URLSearchParams(window.location.search);
-let ROOM_ID = urlParams.get('room') || "302"; // 自動從網址抓房間號，沒抓到才用預設
-
-const firebaseConfig = { apiKey: "YOUR_API_KEY", databaseURL: "https://YOUR_PROJECT.firebaseio.com", projectId: "YOUR_PROJECT_ID" };
+// --- 初始化與 Firebase 配置 (請務必填入你的金鑰) ---
+const firebaseConfig = { 
+    apiKey: "YOUR_API_KEY", 
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com", 
+    projectId: "YOUR_PROJECT_ID" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+const urlParams = new URLSearchParams(window.location.search);
+let ROOM_ID = urlParams.get('room') || "302"; 
 
 const allRoles = {
     "狼人": {c: "WOLF", s: "▶ 夜晚與狼隊商量擊殺一名玩家。"},
@@ -129,21 +133,22 @@ function upd(n, d) { counts[n] = Math.max(0, counts[n] + d); document.getElement
 
 function dealCards() {
     let deck = [];
-    for (let n in counts) { for (let i = 0; i < counts[n]; i++) deck.push(n); }
+    Object.keys(allRoles).forEach(name => {
+        let val = parseInt(document.getElementById('v-' + name).innerText);
+        for(let i=0; i<val; i++) deck.push(name);
+    });
     if (deck.length === 0) return alert("請先配置角色數量");
     deck.sort(() => Math.random() - 0.5);
-    // 生成新的房間時間戳，確保網址唯一性
     ROOM_ID = Date.now().toString(); 
-    db.ref('w_rooms/' + ROOM_ID).set({ roles: deck, deaths: new Array(deck.length).fill(false), timestamp: Date.now() });
-    
-    // 更新當前網址但不重新整理，方便房主直接複製
-    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + ROOM_ID;
-    window.history.pushState({path:newUrl},'',newUrl);
+    db.ref('w_rooms/' + ROOM_ID).set({ roles: deck, deaths: new Array(deck.length).fill(false), timestamp: Date.now() }).then(()=>{
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + ROOM_ID;
+        window.history.pushState({path:newUrl},'',newUrl);
+    });
 }
 
 let currentDeck = [];
 let deaths = [];
-let userIdentity = localStorage.getItem('userIdentity_' + ROOM_ID); // 房間分開存身分
+let userIdentity = localStorage.getItem('userIdentity_' + ROOM_ID);
 
 db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
     const data = snap.val(); if (!data) return;
@@ -158,12 +163,8 @@ function renderUI() {
     const grid = document.getElementById('seat-grid');
     grid.innerHTML = "";
     const hostBtn = document.getElementById('host-master-btn');
-
-    if (userIdentity && userIdentity.startsWith('P_')) {
-        hostBtn.classList.add('hidden');
-    } else {
-        hostBtn.classList.remove('hidden');
-    }
+    if (userIdentity && userIdentity.startsWith('P_')) hostBtn.classList.add('hidden');
+    else hostBtn.classList.remove('hidden');
 
     currentDeck.forEach((r, i) => {
         const btn = document.createElement('button');
@@ -182,6 +183,7 @@ function renderUI() {
         }
         grid.appendChild(btn);
     });
+    if (!document.getElementById('host-screen').classList.contains('hidden')) renderHostContent();
 }
 
 function showCard(name) {
@@ -211,14 +213,12 @@ function renderHostContent() {
 function toggleDeath(index) {
     deaths[index] = !deaths[index];
     db.ref('w_rooms/' + ROOM_ID + '/deaths').set(deaths);
-    renderHostContent(); // 即時刷新列表
 }
 
 function openShareModal() {
     document.getElementById('share-modal').classList.remove('hidden');
     const qrDiv = document.getElementById('qrcode');
     qrDiv.innerHTML = "";
-    // 網址包含房間 ID
     const shareUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + ROOM_ID;
     new QRCode(qrDiv, { text: shareUrl, width: 160, height: 160 });
 }

@@ -94,8 +94,7 @@
 </div>
 
 <script>
-// --- GitHub 圖片設定 ---
-// 只要把 index.html 跟圖片放在同一個資料夾，路徑用 ./ 即可
+// --- GitHub 圖片對照 (確保與你的檔案命名一致) ---
 const roleImgs = {
     "狼人": "18830", "狼王": "18833", "黑狼王": "18837", "白狼王": "18835", "狼美人": "18834",
     "狼兄": "18831", "狼弟": "18832", "機械狼": "18829", "惡靈騎士": "18828", "種狼": "18836"
@@ -138,25 +137,23 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- 渲染邏輯 (含 Emoji) ---
+// --- 渲染列表 (已移除職業前綴符號) ---
 function renderRoleList() {
     const wList = document.getElementById('wolf-list');
     const gList = document.getElementById('good-list');
     wList.innerHTML = ""; gList.innerHTML = "";
     Object.keys(allRoles).forEach(name => {
         counts[name] = 0;
-        const isWolf = allRoles[name].c === "WOLF";
-        const icon = isWolf ? "🐺 " : "😃 ";
         const html = `
             <div class="role-item">
-                <span>${icon}${name}</span>
+                <span>${name}</span>
                 <div class="counter-group">
                     <button class="btn-count" onclick="upd('${name}',-1)">-</button>
                     <span id="v-${name}" class="val">0</span>
                     <button class="btn-count" onclick="upd('${name}',1)">+</button>
                 </div>
             </div>`;
-        if (isWolf) wList.innerHTML += html;
+        if (allRoles[name].c === "WOLF") wList.innerHTML += html;
         else gList.innerHTML += html;
     });
 }
@@ -168,7 +165,6 @@ function upd(name, delta) {
     document.getElementById('total-players').innerText = total;
 }
 
-// --- 遊戲邏輯 ---
 const urlParams = new URLSearchParams(window.location.search);
 let ROOM_ID = urlParams.get('room');
 let userIdentity = localStorage.getItem('userIdentity_' + ROOM_ID);
@@ -246,7 +242,6 @@ function showCard(name) {
 }
 
 function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
-
 function openHostList() {
     const container = document.getElementById('host-content');
     container.innerHTML = currentDeck.map((r, i) => `
@@ -256,16 +251,13 @@ function openHostList() {
         </div>`).join('');
     document.getElementById('host-screen').classList.remove('hidden');
 }
-
 function toggleDeath(i) { currentDeaths[i] = !currentDeaths[i]; db.ref('w_rooms/' + ROOM_ID + '/deaths').set(currentDeaths); openHostList(); }
-
 function openShareModal() {
     document.getElementById('share-modal').classList.remove('hidden');
     const qrDiv = document.getElementById('qrcode');
     qrDiv.innerHTML = "";
     new QRCode(qrDiv, { text: window.location.href, width: 160, height: 160 });
 }
-
 function nativeShare() {
     if(navigator.share) navigator.share({title:'狼人殺助手', url:window.location.href});
     else { navigator.clipboard.writeText(window.location.href); alert("網址已複製！"); }

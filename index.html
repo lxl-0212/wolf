@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>狼人殺助手</title>
+    <title>狼人殺助手 PRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" type="image/png">
     
@@ -24,20 +24,18 @@
         .counter-group { display: flex; align-items: center; gap: 12px; }
         .btn-count { width: 35px; height: 35px; border-radius: 8px; border: none; background: rgba(255, 255, 255, 0.1); color: white; font-size: 20px; cursor: pointer; }
         .val { min-width: 25px; text-align: center; font-weight: bold; color: var(--accent); font-size: 18px; }
-        
-        /* 總人數確認區域 */
         .total-info { text-align: center; margin: 25px 0 10px 0; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 15px; border: 1px dashed rgba(255,255,255,0.1); }
         .total-num { font-size: 24px; color: var(--accent); font-weight: 800; }
-
         .btn-main { width: 100%; padding: 18px; border-radius: 18px; border: none; background: linear-gradient(135deg, #2e86de, #5f27cd); color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
         .seat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .seat-btn { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; height: 70px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
         .seat-btn.my-choice { background: #000; border: 2px solid var(--accent); box-shadow: 0 0 15px var(--accent); }
-        
-        /* 彈窗圖片設定 */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .card-pop { background: #fff; color: #1e293b; padding: 25px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
-        .role-img { width: 100%; max-height: 220px; object-fit: contain; border-radius: 15px; margin-bottom: 15px; background: #f0f0f0; }
+        
+        /* 圖片容器修整 */
+        .role-img-container { width: 100%; margin-bottom: 15px; border-radius: 15px; overflow: hidden; background: #eee; min-height: 150px; display: flex; align-items: center; justify-content: center; }
+        .role-img { width: 100%; height: auto; display: block; }
         
         .share-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--wolf); color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; z-index: 500; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
         #idle-notice { position: fixed; top: 0; width: 100%; background: var(--accent); color: #000; text-align: center; font-size: 12px; font-weight: bold; padding: 5px 0; z-index: 2000; }
@@ -58,10 +56,7 @@
         <div class="camp-title good-t">好人陣營</div>
         <div id="good-list" class="role-grid"></div>
     </div>
-    
-    <div class="total-info">
-        目前已選總人數：<span class="total-num" id="total-players">0</span> 人
-    </div>
+    <div class="total-info">目前已選總人數：<span class="total-num" id="total-players">0</span> 人</div>
     <button class="btn-main" onclick="dealCards()">🎲 生成座位與發牌</button>
 </div>
 
@@ -76,12 +71,14 @@
 
 <div id="reveal-screen" class="overlay hidden">
     <div class="card-pop">
-        <img id="show-img" class="role-img hidden" src="" alt="角色圖片">
+        <div id="img-box" class="role-img-container hidden">
+            <img id="show-img" class="role-img" src="" alt="角色圖片">
+        </div>
         <div id="show-role" style="font-size:2.2rem; font-weight:900; margin-bottom:5px;"></div>
         <div id="camp-tag" style="display:inline-block; padding:3px 12px; border-radius:50px; color:white; font-size:11px; margin-bottom:15px;"></div>
         <div id="show-skill" style="text-align:left; font-size:14px; line-height:1.5; border-top:1px solid #eee; padding-top:12px; color:#444;"></div>
     </div>
-    <button onclick="closeOverlay()" style="margin-top:30px; background:white; color:black; border:none; padding:15px 60px; border-radius:50px; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">記住了</button>
+    <button onclick="closeOverlay()" style="margin-top:30px; background:white; color:black; border:none; padding:15px 60px; border-radius:50px; font-weight:bold;">記住了</button>
 </div>
 
 <div id="share-modal" class="overlay hidden">
@@ -101,11 +98,12 @@
 
 <script>
 // --- 設定區域 ---
-// 角色圖片對應 (填入 Google Drive 檔案 ID)
+// 這裡填入你的 Google Drive 檔案 ID
 const roleImgs = {
-    "狼人": "1R9J7R_vF_S4F7N6P3Q2K5L8M9N1B2C3", 
-    "預言家": "", 
-    "女巫": ""
+    "狼人": "1R9J7R_vF_S4F7N6P3Q2K5L8M9N1B2C3",
+    "預言家": "你的預言家圖片ID",
+    "女巫": "你的女巫圖片ID",
+    "獵人": "你的獵人圖片ID"
 };
 
 const allRoles = {
@@ -131,7 +129,7 @@ const allRoles = {
 };
 let counts = {};
 
-// --- Firebase 初始 ---
+// --- Firebase ---
 const firebaseConfig = {
     apiKey: "AIzaSyAMkVtoNERRaeAQLkuq7F8-Z1Dnu-q4iCM",
     authDomain: "wolf-game-80e1d.firebaseapp.com",
@@ -144,7 +142,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- 閒置保護邏輯 ---
+// --- 閒置斷線 ---
 let idleTimer;
 function resetIdleTimer() {
     clearTimeout(idleTimer);
@@ -152,7 +150,6 @@ function resetIdleTimer() {
         db.goOnline();
         document.getElementById('idle-notice').classList.add('hidden');
     }
-    // 30分鐘自動暫停 Firebase 連線
     idleTimer = setTimeout(() => {
         db.goOffline();
         document.getElementById('idle-notice').classList.remove('hidden');
@@ -160,7 +157,7 @@ function resetIdleTimer() {
 }
 ['mousedown', 'touchstart', 'scroll', 'keydown'].forEach(evt => window.addEventListener(evt, resetIdleTimer));
 
-// --- 介面邏輯 ---
+// --- 介面運作 ---
 function renderRoleList() {
     const wList = document.getElementById('wolf-list');
     const gList = document.getElementById('good-list');
@@ -171,12 +168,10 @@ function renderRoleList() {
         else gList.innerHTML += html;
     });
 }
-
 function upd(name, delta) {
     counts[name] = Math.max(0, counts[name] + delta);
     document.getElementById('v-' + name).innerText = counts[name];
-    let total = 0;
-    for (let n in counts) { total += counts[n]; }
+    let total = 0; for (let n in counts) total += counts[n];
     document.getElementById('total-players').innerText = total;
 }
 
@@ -240,13 +235,15 @@ function renderSeats(roles, deaths) {
 function showCard(name) {
     const data = allRoles[name];
     const imgId = roleImgs[name];
+    const imgBox = document.getElementById('img-box');
     const imgEl = document.getElementById('show-img');
     
-    if (imgId) {
-        imgEl.src = `https://lh3.googleusercontent.com/d/${imgId}`;
-        imgEl.classList.remove('hidden');
+    // 修復：正確轉換 Google Drive 直接顯示連結
+    if (imgId && imgId.length > 5) {
+        imgEl.src = `https://lh3.googleusercontent.com/u/0/d/${imgId}`;
+        imgBox.classList.remove('hidden');
     } else {
-        imgEl.classList.add('hidden');
+        imgBox.classList.add('hidden');
     }
     
     document.getElementById('show-role').innerText = name;

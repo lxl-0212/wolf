@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>狼人殺助手</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" type="image/png">
+    <link rel="icon" href="./18827.webp" type="image/webp">
     
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
@@ -32,10 +32,8 @@
         .seat-btn.my-choice { background: #000; border: 2px solid var(--accent); box-shadow: 0 0 15px var(--accent); }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .card-pop { background: #fff; color: #1e293b; padding: 25px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
-        
         .role-img-container { width: 100%; margin-bottom: 15px; border-radius: 15px; overflow: hidden; background: #eee; min-height: 150px; display: flex; align-items: center; justify-content: center; }
         .role-img { width: 100%; height: auto; display: block; }
-        
         .share-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--wolf); color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; z-index: 500; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
         #idle-notice { position: fixed; top: 0; width: 100%; background: var(--accent); color: #000; text-align: center; font-size: 12px; font-weight: bold; padding: 5px 0; z-index: 2000; }
         .hidden { display: none !important; }
@@ -48,11 +46,11 @@
 <div class="app-card" id="setup-ui">
     <h2>🐺 狼人殺助手</h2>
     <div class="camp-section">
-        <div class="camp-title wolf-t">狼人陣營</div>
+        <div class="camp-title wolf-t">🐺 狼人陣營</div>
         <div id="wolf-list" class="role-grid"></div>
     </div>
     <div class="camp-section">
-        <div class="camp-title good-t">好人陣營</div>
+        <div class="camp-title good-t">😃 好人陣營</div>
         <div id="good-list" class="role-grid"></div>
     </div>
     <div class="total-info">目前已選總人數：<span class="total-num" id="total-players">0</span> 人</div>
@@ -96,11 +94,11 @@
 </div>
 
 <script>
-// --- 設定區域 ---
+// --- GitHub 圖片設定 ---
+// 只要把 index.html 跟圖片放在同一個資料夾，路徑用 ./ 即可
 const roleImgs = {
-    "狼人": "1R9J7R_vF_S4F7N6P3Q2K5L8M9N1B2C3",
-    "黑市商人": "你的黑市商人圖片ID",
-    "邱比特": "你的邱比特圖片ID"
+    "狼人": "18830", "狼王": "18833", "黑狼王": "18837", "白狼王": "18835", "狼美人": "18834",
+    "狼兄": "18831", "狼弟": "18832", "機械狼": "18829", "惡靈騎士": "18828", "種狼": "18836"
 };
 
 const allRoles = {
@@ -108,7 +106,7 @@ const allRoles = {
     "狼兄": {c: "WOLF", s: "狼兄在場時，狼隊夜晚可擊殺兩名玩家。"},
     "狼弟": {c: "WOLF", s: "狼兄出局後的當晚，狼弟狂暴。"},
     "狼王": {c: "WOLF", s: "出局後可帶一人，毒死無法發動。"},
-    "黑狼王": {c: "WOLF", s: "出局後可帶走一名玩家。"},
+    "黑狼王": {c: "WOLF", s: "出局後可射殺一名玩家。"},
     "白狼王": {c: "WOLF", s: "白天自爆可帶走一名玩家。"},
     "狼美人": {c: "WOLF", s: "出局魅惑對象隨之殉情。"},
     "機械狼": {c: "WOLF", s: "可學習一名玩家技能使用。"},
@@ -117,8 +115,8 @@ const allRoles = {
     "預言家": {c: "GOOD", s: "每晚查驗一名玩家陣營。"},
     "女巫": {c: "GOOD", s: "擁有一瓶解藥與毒藥。不可自救。"},
     "獵人": {c: "GOOD", s: "出局後可射殺一名玩家。"},
-    "黑市商人": {c: "GOOD", s: "夜晚可選擇一名玩家並贈予一個技能（預言、毒藥、盾）。"},
-    "邱比特": {c: "GOOD", s: "首夜連結兩名玩家成為情侶，情侶同生共死。"},
+    "黑市商人": {c: "GOOD", s: "夜晚可贈予玩家技能（預言、毒藥、盾）。"},
+    "邱比特": {c: "GOOD", s: "首夜連結兩名玩家成為情侶，同生共死。"},
     "白痴": {c: "GOOD", s: "被放逐免疫死亡，失去投票權。"},
     "守衛": {c: "GOOD", s: "每晚守護一人，不可連守。"},
     "騎士": {c: "GOOD", s: "白天可決鬥，翻開身分分生死。"},
@@ -126,9 +124,8 @@ const allRoles = {
     "攝夢人": {c: "GOOD", s: "每晚守護一人，連夢兩次則死。"},
     "平民": {c: "GOOD", s: "無特殊技能，靠邏輯獲勝。"}
 };
-let counts = {};
 
-// --- Firebase ---
+let counts = {};
 const firebaseConfig = {
     apiKey: "AIzaSyAMkVtoNERRaeAQLkuq7F8-Z1Dnu-q4iCM",
     authDomain: "wolf-game-80e1d.firebaseapp.com",
@@ -141,31 +138,29 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let idleTimer;
-function resetIdleTimer() {
-    clearTimeout(idleTimer);
-    if (!db.app_.container.getProvider("database").getImmediate().repo_?.persistentConnection_?.visible_) {
-        db.goOnline();
-        document.getElementById('idle-notice').classList.add('hidden');
-    }
-    idleTimer = setTimeout(() => {
-        db.goOffline();
-        document.getElementById('idle-notice').classList.remove('hidden');
-    }, 1800000);
-}
-['mousedown', 'touchstart', 'scroll', 'keydown'].forEach(evt => window.addEventListener(evt, resetIdleTimer));
-
+// --- 渲染邏輯 (含 Emoji) ---
 function renderRoleList() {
     const wList = document.getElementById('wolf-list');
     const gList = document.getElementById('good-list');
-    wList.innerHTML = ""; gList.innerHTML = ""; // 清空舊列表
+    wList.innerHTML = ""; gList.innerHTML = "";
     Object.keys(allRoles).forEach(name => {
         counts[name] = 0;
-        const html = `<div class="role-item"><span>${name}</span><div class="counter-group"><button class="btn-count" onclick="upd('${name}',-1)">-</button><span id="v-${name}" class="val">0</span><button class="btn-count" onclick="upd('${name}',1)">+</button></div></div>`;
-        if (allRoles[name].c === "WOLF") wList.innerHTML += html;
+        const isWolf = allRoles[name].c === "WOLF";
+        const icon = isWolf ? "🐺 " : "😃 ";
+        const html = `
+            <div class="role-item">
+                <span>${icon}${name}</span>
+                <div class="counter-group">
+                    <button class="btn-count" onclick="upd('${name}',-1)">-</button>
+                    <span id="v-${name}" class="val">0</span>
+                    <button class="btn-count" onclick="upd('${name}',1)">+</button>
+                </div>
+            </div>`;
+        if (isWolf) wList.innerHTML += html;
         else gList.innerHTML += html;
     });
 }
+
 function upd(name, delta) {
     counts[name] = Math.max(0, counts[name] + delta);
     document.getElementById('v-' + name).innerText = counts[name];
@@ -173,6 +168,7 @@ function upd(name, delta) {
     document.getElementById('total-players').innerText = total;
 }
 
+// --- 遊戲邏輯 ---
 const urlParams = new URLSearchParams(window.location.search);
 let ROOM_ID = urlParams.get('room');
 let userIdentity = localStorage.getItem('userIdentity_' + ROOM_ID);
@@ -194,7 +190,6 @@ window.onload = () => {
             }
         });
     }
-    resetIdleTimer();
 };
 
 function dealCards() {
@@ -210,7 +205,6 @@ function dealCards() {
 function renderSeats(roles, deaths) {
     const grid = document.getElementById('seat-grid');
     grid.innerHTML = "";
-    if (userIdentity) document.getElementById('host-master-btn').classList.add('hidden');
     roles.forEach((r, i) => {
         const btn = document.createElement('button');
         btn.className = 'seat-btn';
@@ -236,8 +230,8 @@ function showCard(name) {
     const imgBox = document.getElementById('img-box');
     const imgEl = document.getElementById('show-img');
     
-    if (imgId && imgId.length > 5) {
-        imgEl.src = `https://lh3.googleusercontent.com/u/0/d/${imgId}`;
+    if (imgId) {
+        imgEl.src = `./${imgId}.webp`; 
         imgBox.classList.remove('hidden');
     } else {
         imgBox.classList.add('hidden');
@@ -245,11 +239,13 @@ function showCard(name) {
     
     document.getElementById('show-role').innerText = name;
     document.getElementById('show-role').style.color = data.c === "WOLF" ? "#ff4757" : "#2e86de";
-    document.getElementById('camp-tag').innerText = data.c === "WOLF" ? "狼人陣營" : "好人陣營";
+    document.getElementById('camp-tag').innerText = data.c === "WOLF" ? "🐺 狼人陣營" : "😃 好人陣營";
     document.getElementById('camp-tag').style.background = data.c === "WOLF" ? "#ff4757" : "#2e86de";
     document.getElementById('show-skill').innerText = data.s;
     document.getElementById('reveal-screen').classList.remove('hidden');
 }
+
+function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
 
 function openHostList() {
     const container = document.getElementById('host-content');
@@ -260,18 +256,20 @@ function openHostList() {
         </div>`).join('');
     document.getElementById('host-screen').classList.remove('hidden');
 }
+
 function toggleDeath(i) { currentDeaths[i] = !currentDeaths[i]; db.ref('w_rooms/' + ROOM_ID + '/deaths').set(currentDeaths); openHostList(); }
+
 function openShareModal() {
     document.getElementById('share-modal').classList.remove('hidden');
     const qrDiv = document.getElementById('qrcode');
     qrDiv.innerHTML = "";
     new QRCode(qrDiv, { text: window.location.href, width: 160, height: 160 });
 }
+
 function nativeShare() {
     if(navigator.share) navigator.share({title:'狼人殺助手', url:window.location.href});
     else { navigator.clipboard.writeText(window.location.href); alert("網址已複製！"); }
 }
-function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
 </script>
 </body>
 </html>

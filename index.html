@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>狼人殺助手 PRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" type="image/png">
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -22,7 +23,6 @@
         .btn-count { width: 35px; height: 35px; border-radius: 8px; border: none; background: rgba(255, 255, 255, 0.1); color: white; font-size: 20px; cursor: pointer; }
         .val { min-width: 25px; text-align: center; font-weight: bold; color: var(--accent); font-size: 18px; }
         
-        /* 人數顯示區域 */
         .total-info { text-align: center; margin: 25px 0 10px 0; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 15px; border: 1px dashed rgba(255,255,255,0.1); }
         .total-num { font-size: 24px; color: var(--accent); font-weight: 800; }
 
@@ -30,16 +30,16 @@
         .seat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .seat-btn { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; height: 70px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
         .seat-btn.my-choice { background: #000; border: 2px solid var(--accent); box-shadow: 0 0 15px var(--accent); }
+        
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .card-pop { background: #fff; color: #1e293b; padding: 40px 30px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
+        .card-pop { background: #fff; color: #1e293b; padding: 25px; border-radius: 30px; width: 85%; max-width: 320px; text-align: center; }
+        .role-img { width: 100%; max-height: 220px; object-fit: contain; border-radius: 15px; margin-bottom: 15px; }
+        
         .share-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--wolf); color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; z-index: 500; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        #idle-notice { position: fixed; top: 0; width: 100%; background: var(--accent); color: #000; text-align: center; font-size: 12px; font-weight: bold; padding: 5px 0; z-index: 2000; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
-
-<div id="idle-notice" class="hidden">💤 偵測到閒置，點擊螢幕恢復連線</div>
 
 <div class="app-card" id="setup-ui">
     <h2>🐺 狼人殺助手</h2>
@@ -69,18 +69,19 @@
 
 <div id="reveal-screen" class="overlay hidden">
     <div class="card-pop">
-        <div id="show-role" style="font-size:2.5rem; font-weight:900; margin-bottom:10px;"></div>
-        <div id="camp-tag" style="display:inline-block; padding:5px 15px; border-radius:50px; color:white; font-size:12px; margin-bottom:20px;"></div>
-        <div id="show-skill" style="text-align:left; font-size:14px; line-height:1.6; border-top:1px solid #eee; padding-top:15px; color:#666;"></div>
+        <img id="show-img" class="role-img hidden" src="" alt="角色圖">
+        <div id="show-role" style="font-size:2.2rem; font-weight:900; margin-bottom:5px;"></div>
+        <div id="camp-tag" style="display:inline-block; padding:3px 12px; border-radius:50px; color:white; font-size:11px; margin-bottom:15px;"></div>
+        <div id="show-skill" style="text-align:left; font-size:14px; line-height:1.5; border-top:1px solid #eee; padding-top:12px; color:#444;"></div>
     </div>
-    <button onclick="closeOverlay()" style="margin-top:40px; background:white; color:black; border:none; padding:15px 60px; border-radius:50px; font-weight:bold;">記住了</button>
+    <button onclick="closeOverlay()" style="margin-top:30px; background:white; color:black; border:none; padding:15px 60px; border-radius:50px; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">記住了</button>
 </div>
 
 <div id="share-modal" class="overlay hidden">
     <div style="background:white; color:black; padding:30px; border-radius:30px; width:80%; max-width:320px; text-align:center;">
         <h3>掃碼加入</h3>
         <div id="qrcode" style="display:flex; justify-content:center; margin-bottom:20px;"></div>
-        <button onclick="nativeShare()" style="width:100%; padding:15px; background:#e63946; color:white; border:none; border-radius:15px; font-weight:bold;">複製/分享連結</button>
+        <button onclick="nativeShare()" style="width:100%; padding:15px; background:#e63946; color:white; border:none; border-radius:15px; font-weight:bold;">分享連結</button>
         <button onclick="closeOverlay()" style="width:100%; margin-top:10px; background:none; border:none; color:#888;">關閉</button>
     </div>
 </div>
@@ -92,6 +93,17 @@
 </div>
 
 <script>
+// Google Drive 圖片連結處理函數
+function getImgUrl(id) { return `https://lh3.googleusercontent.com/u/0/d/${id}=w400-h400-p`; }
+
+// 角色圖片對應表：目前只填入狼人圖片，其他留空
+const roleImgs = {
+    "狼人": "1R9J7R_vF_S4F7N6P3Q2K5L8M9N1B2C3", // 請換成你狼人圖片的 ID
+    "狼王": "",
+    "預言家": "",
+    "女巫": ""
+};
+
 const allRoles = {
     "狼人": {c: "WOLF", s: "夜晚與狼隊商量擊殺一名玩家。"},
     "狼兄": {c: "WOLF", s: "狼兄在場時，狼隊夜晚可擊殺兩名玩家。"},
@@ -115,7 +127,6 @@ const allRoles = {
 };
 let counts = {};
 
-// Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyAMkVtoNERRaeAQLkuq7F8-Z1Dnu-q4iCM",
     authDomain: "wolf-game-80e1d.firebaseapp.com",
@@ -127,18 +138,6 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-// 斷線保護
-let idleTimer;
-function resetIdleTimer() {
-    clearTimeout(idleTimer);
-    if (!db.app_.container.getProvider("database").getImmediate().repo_?.persistentConnection_?.visible_) {
-        db.goOnline();
-        document.getElementById('idle-notice').classList.add('hidden');
-    }
-    idleTimer = setTimeout(() => { db.goOffline(); document.getElementById('idle-notice').classList.remove('hidden'); }, 1800000);
-}
-window.addEventListener('mousedown', resetIdleTimer);
 
 function renderRoleList() {
     const wList = document.getElementById('wolf-list');
@@ -154,8 +153,6 @@ function renderRoleList() {
 function upd(name, delta) {
     counts[name] = Math.max(0, counts[name] + delta);
     document.getElementById('v-' + name).innerText = counts[name];
-    
-    // 更新總人數顯示
     let total = 0;
     for (let n in counts) { total += counts[n]; }
     document.getElementById('total-players').innerText = total;
@@ -182,7 +179,6 @@ window.onload = () => {
             }
         });
     }
-    resetIdleTimer();
 };
 
 function dealCards() {
@@ -220,6 +216,16 @@ function renderSeats(roles, deaths) {
 
 function showCard(name) {
     const data = allRoles[name];
+    const imgId = roleImgs[name];
+    const imgEl = document.getElementById('show-img');
+    
+    if (imgId) {
+        imgEl.src = getImgUrl(imgId);
+        imgEl.classList.remove('hidden');
+    } else {
+        imgEl.classList.add('hidden');
+    }
+    
     document.getElementById('show-role').innerText = name;
     document.getElementById('show-role').style.color = data.c === "WOLF" ? "#ff4757" : "#2e86de";
     document.getElementById('camp-tag').innerText = data.c === "WOLF" ? "狼人陣營" : "好人陣營";

@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>狼人殺助手</title>
+    <title>狼人殺助手 PRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
@@ -13,81 +13,84 @@
             --wolf: #ff4757;
             --good: #2e86de;
             --accent: #ffa502;
-            --card-bg: rgba(30, 41, 59, 0.8);
+            --card-bg: rgba(30, 41, 59, 0.9);
             --text: #f1f5f9;
         }
 
         body {
-            font-family: 'Segoe UI', 'PingFang TC', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", sans-serif;
+            background: #0f172a;
             background: radial-gradient(circle at top right, #1e293b, #0f172a);
             color: var(--text);
             margin: 0;
             padding: 15px;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
         }
 
         .app-card {
             background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            width: 100%;
+            backdrop-filter: blur(15px);
+            width: 90%;
             max-width: 450px;
             border-radius: 28px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 24px;
+            margin: 20px auto;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            height: fit-content;
         }
 
-        h2 { text-align: center; margin-bottom: 25px; font-weight: 800; letter-spacing: 2px; }
+        h2 { text-align: center; margin-top: 0; margin-bottom: 25px; font-weight: 800; letter-spacing: 2px; }
 
-        .camp-section { margin-bottom: 20px; }
+        .camp-section { margin-bottom: 20px; width: 100%; }
         .camp-title {
             font-size: 14px;
             font-weight: bold;
-            padding: 8px 15px;
-            border-radius: 12px;
+            padding: 6px 15px;
+            border-radius: 10px;
             margin-bottom: 12px;
             display: inline-block;
         }
         .wolf-t { background: rgba(255, 71, 87, 0.2); color: var(--wolf); }
         .good-t { background: rgba(46, 134, 222, 0.2); color: var(--good); }
 
+        /* 角色網格：確保對齊的核心 */
         .role-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr; /* 單欄排列更穩 */
             gap: 10px;
+            width: 100%;
         }
 
         .role-item {
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 15px;
-            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .role-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .role-name { font-size: 15px; font-weight: 500; }
 
-        .counter-group { display: flex; align-items: center; gap: 8px; }
+        .counter-group { display: flex; align-items: center; gap: 12px; }
 
         .btn-count {
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
             border: none;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .btn-count:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.3); }
+        .btn-count:active { background: rgba(255, 255, 255, 0.3); }
 
-        .val { min-width: 15px; text-align: center; font-family: monospace; font-size: 15px; font-weight: bold; }
+        .val { min-width: 20px; text-align: center; font-size: 16px; font-weight: bold; color: var(--accent); }
 
         .btn-main {
             width: 100%;
@@ -99,88 +102,52 @@
             color: white;
             font-size: 16px;
             font-weight: bold;
-            box-shadow: 0 10px 20px -5px rgba(46, 134, 222, 0.5);
             cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
-        .seat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px; }
+        .seat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .seat-btn {
             background: #1e293b;
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 18px;
-            height: 70px;
+            border-radius: 15px;
+            height: 60px;
             color: white;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s;
+            font-weight: bold;
         }
-        .seat-btn.my-choice { background: #000; border: 2px solid var(--accent); box-shadow: 0 0 15px var(--accent); }
-        .seat-btn:disabled:not(.my-choice) { opacity: 0.3; }
+        .seat-btn.my-choice { background: #000; border: 2px solid var(--accent); }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; padding: 20px; text-align: center; }
-        .card-pop { background: #fff; color: #1e293b; padding: 40px 30px; border-radius: 30px; width: 85%; max-width: 350px; box-shadow: 0 0 40px rgba(255,255,255,0.1); }
-        
-        .share-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--wolf); color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.3); z-index: 500; }
-        #idle-notice { position: fixed; top: 0; width: 100%; background: var(--accent); color: black; text-align: center; font-size: 12px; font-weight: bold; padding: 5px 0; z-index: 2000; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="idle-notice" class="hidden">💤 偵測到閒置，點擊螢幕恢復連線</div>
-
-<div class="app-card">
-    <div id="setup-ui">
-        <h2>🐺 狼人殺助手</h2>
-        
-        <div class="camp-section">
-            <div class="camp-title wolf-t">狼人陣營</div>
-            <div class="role-grid" id="wolf-list"></div>
-        </div>
-
-        <div class="camp-section">
-            <div class="camp-title good-t">好人陣營</div>
-            <div class="role-grid" id="good-list"></div>
-        </div>
-
-        <button class="btn-main" onclick="dealCards()">🎲 生成座位與發牌</button>
+<div class="app-card" id="setup-ui">
+    <h2>🐺 狼人殺助手</h2>
+    
+    <div class="camp-section">
+        <div class="camp-title wolf-t">狼人陣營</div>
+        <div id="wolf-list" class="role-grid"></div>
     </div>
 
-    <div id="game-ui" class="hidden">
-        <h3 style="text-align:center">房間號：<span id="room-display" style="color:var(--accent)"></span></h3>
-        <div id="seat-grid" class="seat-grid"></div>
-        <button id="host-master-btn" style="width:100%; margin-top:40px; background:none; border:1px dashed #444; color:#666; padding:10px; border-radius:10px;" onclick="openHostList()">上帝全視角 (主持人)</button>
-        <button onclick="location.href=location.pathname" style="width:100%; margin-top:20px; background:none; border:none; color:#444; font-size:12px;">結束並返回首頁</button>
+    <div class="camp-section">
+        <div class="camp-title good-t">好人陣營</div>
+        <div id="good-list" class="role-grid"></div>
     </div>
+
+    <button class="btn-main" onclick="dealCards()">🎲 生成座位與發牌</button>
 </div>
 
-<div id="share-trigger" class="share-bar hidden" onclick="openShareModal()">🔗 分享與掃碼</div>
-
-<div id="reveal-screen" class="overlay hidden">
-    <div class="card-pop">
-        <div id="show-role" style="font-size:2.8rem; font-weight:900; margin-bottom:10px;"></div>
-        <div id="camp-tag" style="display:inline-block; padding:5px 15px; border-radius:50px; color:white; font-size:12px; margin-bottom:20px;"></div>
-        <div id="show-skill" style="text-align:left; font-size:14px; line-height:1.6; border-top:1px solid #eee; padding-top:15px; color:#666;"></div>
-    </div>
-    <button onclick="closeOverlay()" style="margin-top:40px; background:white; color:black; border:none; padding:15px 60px; border-radius:50px; font-weight:bold;">記住了</button>
-</div>
-
-<div id="host-screen" class="overlay hidden">
-    <h3 style="margin-bottom:20px">上帝全視角</h3>
-    <div id="host-content" style="width:100%; max-height:60vh; overflow-y:auto; padding:10px;"></div>
-    <button onclick="closeOverlay()" style="margin-top:20px; color:#aaa; background:none; border:none;">返回遊戲</button>
-</div>
-
-<div id="share-modal" class="overlay hidden">
-    <div style="background:white; color:black; padding:30px; border-radius:30px; width:80%; max-width:320px;">
-        <h3 style="margin-bottom:15px">掃碼加入</h3>
-        <div id="qrcode" style="display:flex; justify-content:center; margin-bottom:20px;"></div>
-        <button onclick="nativeShare()" style="width:100%; padding:15px; background:#e63946; color:white; border:none; border-radius:15px; font-weight:bold;">複製/分享連結</button>
-        <button onclick="closeOverlay()" style="width:100%; margin-top:10px; background:none; border:none; color:#888;">關閉</button>
-    </div>
+<div class="app-card hidden" id="game-ui">
+    <h3 style="text-align:center">房間號：<span id="room-display" style="color:var(--accent)"></span></h3>
+    <div id="seat-grid" class="seat-grid"></div>
+    <button id="host-master-btn" style="width:100%; margin-top:30px; background:none; border:1px dashed #555; color:#888; padding:10px; border-radius:10px;" onclick="openHostList()">上帝全視角 (主持人)</button>
+    <button onclick="location.href=location.pathname" style="width:100%; margin-top:20px; background:none; border:none; color:#666; font-size:12px;">返回首頁</button>
 </div>
 
 <script>
+// --- Firebase 配置 (維持原樣) ---
 const firebaseConfig = {
     apiKey: "AIzaSyAMkVtoNERRaeAQLkuq7F8-Z1Dnu-q4iCM",
     authDomain: "wolf-game-80e1d.firebaseapp.com",
@@ -194,61 +161,46 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 自動斷線邏輯
-let idleTimer;
-function resetIdleTimer() {
-    clearTimeout(idleTimer);
-    if (!firebase.database().app_.container.getProvider("database").getImmediate().repo_?.persistentConnection_?.visible_) {
-        firebase.database().goOnline();
-        document.getElementById('idle-notice').classList.add('hidden');
-    }
-    idleTimer = setTimeout(() => {
-        firebase.database().goOffline();
-        document.getElementById('idle-notice').classList.remove('hidden');
-    }, 1800000);
-}
-['mousedown', 'touchstart', 'scroll'].forEach(evt => window.addEventListener(evt, resetIdleTimer));
-resetIdleTimer();
-
 const allRoles = {
-    "狼人": {c: "WOLF", s: "夜晚與狼隊商量擊殺一名玩家。"},
-    "狼兄": {c: "WOLF", s: "狼兄在場時，狼隊夜晚可擊殺兩名玩家。"},
-    "狼弟": {c: "WOLF", s: "狼兄出局後的當晚，狼弟狂暴。"},
-    "狼王": {c: "WOLF", s: "出局後可帶一人，毒死無法發動。"},
-    "黑狼王": {c: "WOLF", s: "出局後可帶走一名玩家。"},
-    "白狼王": {c: "WOLF", s: "白天自爆可帶走一名玩家。"},
-    "狼美人": {c: "WOLF", s: "出局魅惑對象隨之殉情。"},
-    "機械狼": {c: "WOLF", s: "可學習一名玩家技能使用。"},
-    "惡靈騎士": {c: "WOLF", s: "反彈夜晚受到的技能且不死。"},
-    "種狼": {c: "WOLF", s: "可感染一名玩家成狼人。"},
-    "預言家": {c: "GOOD", s: "每晚查驗一名玩家陣營。"},
-    "女巫": {c: "GOOD", s: "擁有一瓶解藥與毒藥。不可自救。"},
-    "獵人": {c: "GOOD", s: "出局後可射殺一名玩家。"},
-    "白痴": {c: "GOOD", s: "被放逐免疫死亡，失去投票權。"},
-    "守衛": {c: "GOOD", s: "每晚守護一人，不可連守。"},
-    "騎士": {c: "GOOD", s: "白天可決鬥，翻開身分分生死。"},
-    "魔術師": {c: "GOOD", s: "每晚交換兩名玩家狀態。"},
-    "攝夢人": {c: "GOOD", s: "每晚守護一人，連夢兩次則死。"},
-    "平民": {c: "GOOD", s: "無特殊技能，靠邏輯獲勝。"}
+    "狼人": "WOLF", "狼兄": "WOLF", "狼弟": "WOLF", "狼王": "WOLF", "黑狼王": "WOLF",
+    "白狼王": "WOLF", "狼美人": "WOLF", "機械狼": "WOLF", "惡靈騎士": "WOLF", "種狼": "WOLF",
+    "預言家": "GOOD", "女巫": "GOOD", "獵人": "GOOD", "白痴": "GOOD", "守衛": "GOOD",
+    "騎士": "GOOD", "魔術師": "GOOD", "攝夢人": "GOOD", "平民": "GOOD"
 };
 
 let counts = {};
-Object.keys(allRoles).forEach(n => {
-    counts[n] = 0;
-    const item = document.createElement('div');
-    item.className = 'role-item';
-    item.innerHTML = `<span class="role-name">${n}</span><div class="counter-group"><button class="btn-count" onclick="upd('${n}',-1)">-</button><span id="v-${n}" class="val">0</span><button class="btn-count" onclick="upd('${n}',1)">+</button></div>`;
-    if (allRoles[n].c === "WOLF") document.getElementById('wolf-list').appendChild(item);
-    else document.getElementById('good-list').appendChild(item);
-});
 
-function upd(n, d) { counts[n] = Math.max(0, counts[n] + d); document.getElementById('v-' + n).innerText = counts[n]; }
+// 初始化清單
+function initList() {
+    const wList = document.getElementById('wolf-list');
+    const gList = document.getElementById('good-list');
+    wList.innerHTML = "";
+    gList.innerHTML = "";
 
-const urlParams = new URLSearchParams(window.location.search);
-let ROOM_ID = urlParams.get('room');
-let userIdentity = localStorage.getItem('userIdentity_' + ROOM_ID);
-let currentDeck = [], deaths = [];
+    Object.keys(allRoles).forEach(name => {
+        counts[name] = 0;
+        const html = `
+            <div class="role-item">
+                <span class="role-name">${name}</span>
+                <div class="counter-group">
+                    <button class="btn-count" onclick="upd('${name}',-1)">-</button>
+                    <span id="v-${name}" class="val">0</span>
+                    <button class="btn-count" onclick="upd('${name}',1)">+</button>
+                </div>
+            </div>`;
+        if (allRoles[name] === "WOLF") wList.innerHTML += html;
+        else gList.innerHTML += html;
+    });
+}
 
+function upd(name, delta) {
+    counts[name] = Math.max(0, counts[name] + delta);
+    document.getElementById('v-' + name).innerText = counts[name];
+}
+
+initList(); // 執行初始化
+
+// 遊戲邏輯 (發牌/房號)
 function dealCards() {
     let deck = [];
     for (let n in counts) { for (let i = 0; i < counts[n]; i++) deck.push(n); }
@@ -259,73 +211,30 @@ function dealCards() {
       .then(() => { window.location.search = '?room=' + newID; });
 }
 
+// 進入房間邏輯
+const urlParams = new URLSearchParams(window.location.search);
+let ROOM_ID = urlParams.get('room');
 if (ROOM_ID) {
+    document.getElementById('setup-ui').classList.add('hidden');
+    document.getElementById('game-ui').classList.remove('hidden');
     document.getElementById('room-display').innerText = ROOM_ID;
     db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
         const data = snap.val();
-        if (!data) return;
-        currentDeck = data.roles;
-        deaths = data.deaths || [];
-        document.getElementById('setup-ui').classList.add('hidden');
-        document.getElementById('game-ui').classList.remove('hidden');
-        document.getElementById('share-trigger').classList.remove('hidden');
-        renderUI();
+        if (data) renderSeats(data.roles, data.deaths);
     });
 }
 
-function renderUI() {
+function renderSeats(roles, deaths) {
     const grid = document.getElementById('seat-grid');
     grid.innerHTML = "";
-    if (userIdentity && userIdentity.startsWith('P_')) document.getElementById('host-master-btn').classList.add('hidden');
-    currentDeck.forEach((r, i) => {
+    roles.forEach((r, i) => {
         const btn = document.createElement('button');
         btn.className = 'seat-btn';
-        if (deaths[i]) btn.style.border = "1px solid #ff4757";
-        if (userIdentity === `P_${i}`) {
-            btn.classList.add('my-choice'); btn.innerText = `${i+1} 號 (我)`;
-            btn.onclick = () => showCard(r);
-        } else if (userIdentity) {
-            btn.innerText = `${i+1} 號 ${deaths[i] ? '💀' : ''}`; btn.disabled = true;
-        } else {
-            btn.innerText = `${i+1} 號 點我看牌`;
-            btn.onclick = () => { if(confirm(`鎖定 ${i+1} 號？`)) { userIdentity=`P_${i}`; localStorage.setItem('userIdentity_' + ROOM_ID, userIdentity); renderUI(); showCard(r); }};
-        }
+        btn.innerText = `${i+1} 號`;
+        if (deaths && deaths[i]) btn.style.opacity = "0.3";
         grid.appendChild(btn);
     });
 }
-
-function showCard(name) {
-    const data = allRoles[name];
-    document.getElementById('show-role').innerText = name;
-    document.getElementById('show-role').style.color = data.c === "WOLF" ? "#ff4757" : "#2e86de";
-    document.getElementById('camp-tag').innerText = data.c === "WOLF" ? "狼人陣營" : "好人陣營";
-    document.getElementById('camp-tag').style.background = data.c === "WOLF" ? "#ff4757" : "#2e86de";
-    document.getElementById('show-skill').innerText = data.s;
-    document.getElementById('reveal-screen').classList.remove('hidden');
-}
-
-function openHostList() {
-    const container = document.getElementById('host-content');
-    container.innerHTML = currentDeck.map((r, i) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); margin-bottom:10px; padding:15px; border-radius:15px;">
-            <div style="${deaths[i] ? 'text-decoration:line-through; opacity:0.3' : ''}">${i+1} 號：<strong>${r}</strong></div>
-            <button onclick="toggleDeath(${i})" style="background:${deaths[i] ? '#666' : '#ff4757'}; color:white; border:none; padding:8px 15px; border-radius:10px;">${deaths[i] ? '復活' : '擊殺'}</button>
-        </div>`).join('');
-    document.getElementById('host-screen').classList.remove('hidden');
-}
-
-function toggleDeath(i) { deaths[i] = !deaths[i]; db.ref('w_rooms/' + ROOM_ID + '/deaths').set(deaths); openHostList(); }
-function openShareModal() {
-    document.getElementById('share-modal').classList.remove('hidden');
-    const qrDiv = document.getElementById('qrcode');
-    qrDiv.innerHTML = "";
-    new QRCode(qrDiv, { text: window.location.href, width: 160, height: 160 });
-}
-function nativeShare() {
-    if(navigator.share) navigator.share({title:'狼人殺助手', url:window.location.href});
-    else { navigator.clipboard.writeText(window.location.href); alert("網址已複製到剪貼簿！"); }
-}
-function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
 </script>
 </body>
 </html>

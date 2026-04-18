@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>狼人殺助手</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="./18827.webp" type="image/webp">
+    <link rel="icon" href="./favicon.webp" type="image/webp">
     
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
@@ -35,13 +35,10 @@
         .role-img-container { width: 100%; margin-bottom: 15px; border-radius: 15px; overflow: hidden; background: #eee; min-height: 150px; display: flex; align-items: center; justify-content: center; }
         .role-img { width: 100%; height: auto; display: block; }
         .share-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--wolf); color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; z-index: 500; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        #idle-notice { position: fixed; top: 0; width: 100%; background: var(--accent); color: #000; text-align: center; font-size: 12px; font-weight: bold; padding: 5px 0; z-index: 2000; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
-
-<div id="idle-notice" class="hidden">💤 偵測到閒置，點擊螢幕恢復連線</div>
 
 <div class="app-card" id="setup-ui">
     <h2>🐺 狼人殺助手</h2>
@@ -94,10 +91,12 @@
 </div>
 
 <script>
-// --- GitHub 圖片對照 (確保與你的檔案命名一致) ---
+// --- 圖片對應表 (1~21 數字檔名) ---
 const roleImgs = {
-    "狼人": "18830", "狼王": "18833", "黑狼王": "18837", "白狼王": "18835", "狼美人": "18834",
-    "狼兄": "18831", "狼弟": "18832", "機械狼": "18829", "惡靈騎士": "18828", "種狼": "18836"
+    "狼人": "1", "狼兄": "2", "狼弟": "3", "狼王": "4", "狼美人": "5",
+    "白狼王": "6", "種狼": "7", "黑狼王": "8", "惡靈騎士": "9", "機械狼": "10",
+    "預言家": "11", "女巫": "12", "獵人": "13", "黑市商人": "14", "邱比特": "15", 
+    "白痴": "16", "守衛": "17", "騎士": "18", "魔術師": "19", "攝夢人": "20", "平民": "21"
 };
 
 const allRoles = {
@@ -105,12 +104,12 @@ const allRoles = {
     "狼兄": {c: "WOLF", s: "狼兄在場時，狼隊夜晚可擊殺兩名玩家。"},
     "狼弟": {c: "WOLF", s: "狼兄出局後的當晚，狼弟狂暴。"},
     "狼王": {c: "WOLF", s: "出局後可帶一人，毒死無法發動。"},
-    "黑狼王": {c: "WOLF", s: "出局後可射殺一名玩家。"},
-    "白狼王": {c: "WOLF", s: "白天自爆可帶走一名玩家。"},
     "狼美人": {c: "WOLF", s: "出局魅惑對象隨之殉情。"},
-    "機械狼": {c: "WOLF", s: "可學習一名玩家技能使用。"},
-    "惡靈騎士": {c: "WOLF", s: "反彈夜晚受到的技能且不死。"},
+    "白狼王": {c: "WOLF", s: "白天自爆可帶走一名玩家。"},
     "種狼": {c: "WOLF", s: "可感染一名玩家成狼人。"},
+    "黑狼王": {c: "WOLF", s: "出局後可射殺一名玩家。"},
+    "惡靈騎士": {c: "WOLF", s: "反彈夜晚受到的技能且不死。"},
+    "機械狼": {c: "WOLF", s: "可學習一名玩家技能使用。"},
     "預言家": {c: "GOOD", s: "每晚查驗一名玩家陣營。"},
     "女巫": {c: "GOOD", s: "擁有一瓶解藥與毒藥。不可自救。"},
     "獵人": {c: "GOOD", s: "出局後可射殺一名玩家。"},
@@ -137,7 +136,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- 渲染列表 (已移除職業前綴符號) ---
 function renderRoleList() {
     const wList = document.getElementById('wolf-list');
     const gList = document.getElementById('good-list');
@@ -242,6 +240,7 @@ function showCard(name) {
 }
 
 function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
+
 function openHostList() {
     const container = document.getElementById('host-content');
     container.innerHTML = currentDeck.map((r, i) => `
@@ -251,13 +250,16 @@ function openHostList() {
         </div>`).join('');
     document.getElementById('host-screen').classList.remove('hidden');
 }
+
 function toggleDeath(i) { currentDeaths[i] = !currentDeaths[i]; db.ref('w_rooms/' + ROOM_ID + '/deaths').set(currentDeaths); openHostList(); }
+
 function openShareModal() {
     document.getElementById('share-modal').classList.remove('hidden');
     const qrDiv = document.getElementById('qrcode');
     qrDiv.innerHTML = "";
     new QRCode(qrDiv, { text: window.location.href, width: 160, height: 160 });
 }
+
 function nativeShare() {
     if(navigator.share) navigator.share({title:'狼人殺助手', url:window.location.href});
     else { navigator.clipboard.writeText(window.location.href); alert("網址已複製！"); }

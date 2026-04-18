@@ -2,9 +2,9 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>狼人殺助手</title>
+    <title>狼人殺助手 PRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="./favicon.webp" type="image/webp">
+    <link rel="icon" href="./IMG_1013 Copy.JPG" type="image/jpeg">
     
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
@@ -91,12 +91,11 @@
 </div>
 
 <script>
-// --- 圖片對應表 (1~21 數字檔名) ---
 const roleImgs = {
-    "狼人": "1", "狼兄": "2", "狼弟": "3", "狼王": "4", "狼美人": "5",
-    "白狼王": "6", "種狼": "7", "黑狼王": "8", "惡靈騎士": "9", "機械狼": "10",
-    "預言家": "11", "女巫": "12", "獵人": "13", "黑市商人": "14", "邱比特": "15", 
-    "白痴": "16", "守衛": "17", "騎士": "18", "魔術師": "19", "攝夢人": "20", "平民": "21"
+    "狼人": "狼人", "狼兄": "狼兄", "狼弟": "狼弟", "狼王": "狼王", "狼美人": "狼美人",
+    "白狼王": "白狼王", "種狼": "種狼", "黑狼王": "黑狼王", "惡靈騎士": "惡靈騎士", "機械狼": "機械狼",
+    "預言家": "預言家", "女巫": "女巫", "獵人": "獵人", "黑市商人": "黑市商人", "邱比特": "邱比特", 
+    "白痴": "白痴", "守衛": "守衛", "騎士": "騎士", "魔術師": "魔術師", "攝夢人": "攝夢人", "平民": "平民"
 };
 
 const allRoles = {
@@ -142,15 +141,7 @@ function renderRoleList() {
     wList.innerHTML = ""; gList.innerHTML = "";
     Object.keys(allRoles).forEach(name => {
         counts[name] = 0;
-        const html = `
-            <div class="role-item">
-                <span>${name}</span>
-                <div class="counter-group">
-                    <button class="btn-count" onclick="upd('${name}',-1)">-</button>
-                    <span id="v-${name}" class="val">0</span>
-                    <button class="btn-count" onclick="upd('${name}',1)">+</button>
-                </div>
-            </div>`;
+        const html = `<div class="role-item"><span>${name}</span><div class="counter-group"><button class="btn-count" onclick="upd('${name}',-1)">-</button><span id="v-${name}" class="val">0</span><button class="btn-count" onclick="upd('${name}',1)">+</button></div></div>`;
         if (allRoles[name].c === "WOLF") wList.innerHTML += html;
         else gList.innerHTML += html;
     });
@@ -175,13 +166,26 @@ window.onload = () => {
         document.getElementById('game-ui').classList.remove('hidden');
         document.getElementById('share-trigger').classList.remove('hidden');
         document.getElementById('room-display').innerText = ROOM_ID;
-        db.ref('w_rooms/' + ROOM_ID).on('value', snap => {
+        
+        const roomRef = db.ref('w_rooms/' + ROOM_ID);
+        roomRef.on('value', snap => {
             const data = snap.val();
-            if (data) {
-                currentDeck = data.roles;
-                currentDeaths = data.deaths || new Array(data.roles.length).fill(false);
-                renderSeats(currentDeck, currentDeaths);
+            if (!data) return;
+
+            const now = Date.now();
+            const maxLife = 2 * 60 * 60 * 1000; // 2小時總時限
+
+            // 檢查是否超過總時限 (2小時)
+            if (now - data.lastAction > maxLife) {
+                alert("房間已閒置超過 2 小時，系統自動清理。");
+                roomRef.remove();
+                location.href = location.pathname;
+                return;
             }
+
+            currentDeck = data.roles;
+            currentDeaths = data.deaths || new Array(data.roles.length).fill(false);
+            renderSeats(currentDeck, currentDeaths);
         });
     }
 };
@@ -192,8 +196,19 @@ function dealCards() {
     if (deck.length === 0) return alert("請先選取角色！");
     deck.sort(() => Math.random() - 0.5);
     const newID = "R" + Math.floor(100000 + Math.random() * 900000);
-    db.ref('w_rooms/' + newID).set({ roles: deck, deaths: new Array(deck.length).fill(false), timestamp: Date.now() })
-      .then(() => { window.location.search = '?room=' + newID; });
+    const now = Date.now();
+    db.ref('w_rooms/' + newID).set({ 
+        roles: deck, 
+        deaths: new Array(deck.length).fill(false), 
+        timestamp: now,
+        lastAction: now 
+    }).then(() => { window.location.search = '?room=' + newID; });
+}
+
+function refreshActivity() {
+    if (ROOM_ID) {
+        db.ref('w_rooms/' + ROOM_ID + '/lastAction').set(Date.now());
+    }
 }
 
 function renderSeats(roles, deaths) {
@@ -205,14 +220,14 @@ function renderSeats(roles, deaths) {
         if (userIdentity === `P_${i}`) {
             btn.classList.add('my-choice');
             btn.innerText = `${i+1} 號 (我)`;
-            btn.onclick = () => showCard(r);
+            btn.onclick = () => { showCard(r); refreshActivity(); };
         } else if (userIdentity) {
             btn.innerText = `${i+1} 號 ${deaths[i] ? '💀' : ''}`;
             btn.disabled = true;
             btn.style.opacity = deaths[i] ? "0.3" : "1";
         } else {
             btn.innerText = `${i+1} 號`;
-            btn.onclick = () => { if(confirm(`鎖定 ${i+1} 號？`)) { userIdentity=`P_${i}`; localStorage.setItem('userIdentity_' + ROOM_ID, userIdentity); renderSeats(roles, deaths); showCard(r); }};
+            btn.onclick = () => { if(confirm(`鎖定 ${i+1} 號？`)) { userIdentity=`P_${i}`; localStorage.setItem('userIdentity_' + ROOM_ID, userIdentity); refreshActivity(); renderSeats(roles, deaths); showCard(r); }};
         }
         grid.appendChild(btn);
     });
@@ -223,14 +238,8 @@ function showCard(name) {
     const imgId = roleImgs[name];
     const imgBox = document.getElementById('img-box');
     const imgEl = document.getElementById('show-img');
-    
-    if (imgId) {
-        imgEl.src = `./${imgId}.webp`; 
-        imgBox.classList.remove('hidden');
-    } else {
-        imgBox.classList.add('hidden');
-    }
-    
+    if (imgId) { imgEl.src = `./${imgId}.webp`; imgBox.classList.remove('hidden'); }
+    else { imgBox.classList.add('hidden'); }
     document.getElementById('show-role').innerText = name;
     document.getElementById('show-role').style.color = data.c === "WOLF" ? "#ff4757" : "#2e86de";
     document.getElementById('camp-tag').innerText = data.c === "WOLF" ? "🐺 狼人陣營" : "😃 好人陣營";
@@ -242,6 +251,7 @@ function showCard(name) {
 function closeOverlay() { document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden')); }
 
 function openHostList() {
+    refreshActivity();
     const container = document.getElementById('host-content');
     container.innerHTML = currentDeck.map((r, i) => `
         <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); margin-bottom:10px; padding:15px; border-radius:15px;">
@@ -251,7 +261,12 @@ function openHostList() {
     document.getElementById('host-screen').classList.remove('hidden');
 }
 
-function toggleDeath(i) { currentDeaths[i] = !currentDeaths[i]; db.ref('w_rooms/' + ROOM_ID + '/deaths').set(currentDeaths); openHostList(); }
+function toggleDeath(i) { 
+    currentDeaths[i] = !currentDeaths[i]; 
+    db.ref('w_rooms/' + ROOM_ID + '/deaths').set(currentDeaths); 
+    refreshActivity();
+    openHostList(); 
+}
 
 function openShareModal() {
     document.getElementById('share-modal').classList.remove('hidden');
